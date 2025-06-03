@@ -1,0 +1,85 @@
+%YAML 1.1
+---
+# ================================
+# Suricata Configuration File
+# Monitorea únicamente tráfico hacia 192.168.56.4/32 en eth0
+# ================================
+
+# 1. Run Mode Configuration
+runmode: autofp
+
+# 2. Logging
+logging:
+  default-log-level: info
+  outputs:
+    - console:
+        enabled: yes
+    - file:
+        enabled: yes
+        filename: /var/log/suricata/suricata.log
+
+# 3. Variables de Red
+vars:
+  address-groups:
+    HOME_NET: "[192.168.56.4/24]"      # Solo la IP del host en eth0
+  port-groups:
+    HTTP_PORTS: "[80,443]"
+    SHELLCODE_PORTS: "[!80, !445, !8080]"
+    # Removed SHELLCODE_PORTS_MATCHED as it's not a standard Suricata variable
+
+# 4. Archivos de Reglas
+default-rule-path: /etc/suricata/rules
+rule-files:
+  - local.rules
+
+# 5. AF_PACKET Configuration
+af-packet:
+  - interface: eth0
+    threads: 4
+    ring-buffer-size: 256m
+    # Forzar uso de tpacket-v3:
+    tpacket-v3: yes
+
+# 6. Detección de Protocolos de Capa de Aplicación
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+    dns:
+      enabled: yes
+    tls:
+      enabled: yes
+    ssh:
+      enabled: yes
+    ftp:
+      enabled: no
+    smtp:
+      enabled: no
+    dnp3:
+      enabled: no
+    modbus:
+      enabled: no
+
+# 7. Salidas (EVE JSON)
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      types:
+        - alert
+
+# 8. Host OS Policy - Disabled to prevent errors in container
+# host-os-policy:
+#   - name: Linux
+#     log: yes
+stats:
+  enabled: no 
+
+# 9. Clasificación y Referencias (archivos por defecto)
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+
+# 10. Configuración de Threshold (opcional)
+threshold-config:
+  - /etc/suricata/threshold.config

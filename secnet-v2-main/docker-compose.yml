@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  suricata:
+    build: ./suricata
+    container_name: suricata
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./suricata/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata/rules/local.rules:/etc/suricata/rules/local.rules:ro
+      - ./logs:/var/log/suricata
+      - /etc/localtime:/etc/localtime:ro
+    command: ["/usr/bin/suricata", "-c", "/etc/suricata/suricata.yaml", "-i", "eth0"]
+    restart: unless-stopped
+
+  python-responder:
+    build: ./python-responder
+    container_name: python-responder
+    networks:
+      - incident-network
+    volumes:
+      - ./web-interface:/var/www/html           # código PHP de la web
+      - ./logs:/var/log/suricata:ro
+      - ./database:/app/database    # (tal como lo llevabas)
+    depends_on:
+      - suricata
+    restart: unless-stopped
+    command: ["python", "responder.py"]
+
+  web-interface:
+    build: ./web-interface
+    container_name: web-interface
+    networks:
+      - incident-network
+    ports:
+      - "8080:80"
+    volumes:
+      # Código PHP de la interfaz
+      - ./web-interface:/var/www/html
+      # BD para que la web lea alertas
+      - ./database:/var/www/html/database
+      # Acceso a logs (opcional, p.ej. para descargas)
+      - ./logs:/var/www/html/logs:ro
+    depends_on:
+      - suricata
+      - python-responder
+    restart: unless-stopped
+
+networks:
+  incident-network:
+    driver: bridge
