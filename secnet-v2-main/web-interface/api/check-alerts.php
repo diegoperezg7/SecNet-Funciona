@@ -67,7 +67,7 @@ try {
     $total_alerts = (int)$db->querySingle("SELECT COUNT(*) FROM alerts");
     $high_severity = (int)$db->querySingle("SELECT COUNT(*) FROM alerts WHERE severity >= 2");
     $blocked_ips = (int)$db->querySingle("SELECT COUNT(*) FROM blocked_ips");
-    $recent_alerts = (int)$db->querySingle("SELECT COUNT(*) FROM alerts WHERE timestamp > datetime('now', '-24 hours')");
+    $recent_alerts = (int)$db->querySingle("SELECT COUNT(*) FROM alerts WHERE timestamp > datetime('now', 'localtime', '-24 hours')");
 
     // Cerrar la conexión a la base de datos
     $db->close();

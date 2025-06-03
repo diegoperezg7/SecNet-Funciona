@@ -44,7 +44,7 @@ if ($count > 0) {
 }
 
 // Llamar a la API REST Python
-$api_url = 'http://localhost:5000/api/block-ip';
+$api_url = 'http://python-responder:5000/api/block-ip';
 $payload = json_encode(['ip_address' => $ip, 'reason' => $reason]);
 
 $ch = curl_init($api_url);
@@ -76,17 +76,8 @@ if ($httpcode !== 200 || !$response['success']) {
     exit;
 }
 
-// Insertar la IP en la tabla de IPs bloqueadas
-$stmt = $db->prepare("INSERT INTO blocked_ips (ip_address, timestamp, reason) VALUES (:ip, datetime('now'), :reason)");
-$stmt->bindValue(':ip', $ip, SQLITE3_TEXT);
-$stmt->bindValue(':reason', $reason, SQLITE3_TEXT);
-
-if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => $response['message']]);
-} else {
-    error_log('Error de base de datos: ' . $db->lastErrorMsg());
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $db->lastErrorMsg()]);
-}
+// El registro en la tabla blocked_ips lo realiza el backend Python.
+echo json_encode(['success' => true, 'message' => $response['message']]);
 
 $db->close();
 // Dependencias: PHP con cURL y SQLite3, backend Python escuchando en http://localhost:5000

@@ -163,3 +163,115 @@
 [1 - Suricata-Main] 2025-06-03 19:53:52 Notice: suricata: Signal Received.  Stopping engine.
 [1 - Suricata-Main] 2025-06-03 19:53:52 Info: suricata: time elapsed 107.245s
 [1 - Suricata-Main] 2025-06-03 19:53:53 Notice: device: eth0: packets: 5304, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-03 20:19:24 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-03 20:19:24 Error: detect-content: '\' has to be escaped
+[1 - Suricata-Main] 2025-06-03 20:19:24 Error: detect: error parsing signature "alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt";     flow:to_server,established;     content:"\x00\x00\x00\x00"; depth:4;     detection_filter: track by_src, count 1, seconds 1800;     sid:1000003; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 17
+[1 - Suricata-Main] 2025-06-03 20:19:24 Error: detect-parse: rule 1000004 setup buffer dns_query but didn't add matches to it
+[1 - Suricata-Main] 2025-06-03 20:19:24 Error: detect: error parsing signature "alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume";     dns.query; threshold:type threshold, track by_src, count 50, seconds 60;     sid:1000004; rev:1; classtype:trojan-activity; priority:1;)" from file /etc/suricata/rules/local.rules at line 24
+[1 - Suricata-Main] 2025-06-03 20:19:24 Error: detect-parse: unknown rule keyword 'tls.cipher_suite'.
+[1 - Suricata-Main] 2025-06-03 20:19:24 Error: detect: error parsing signature "alert tls any any -> $HOME_NET any (msg:"SSL/TLS Cipher Suite Downgrade Attempt";     tls.cipher_suite:0x0000;     detection_filter: track by_src, count 1, seconds 3600;     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 29
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: detect: 1 rule files processed. 7 rules successfully loaded, 3 rules failed, 0
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: detect: 7 signatures processed. 1 are IP-only rules, 0 are inspecting packet payload, 0 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-03 20:19:24 Warning: af-packet: eth0: tpacket v3 is only implemented for 'workers' runmode. Switching to tpacket v2.
+[1 - Suricata-Main] 2025-06-03 20:19:24 Warning: af-packet: eth0: AF_PACKET tpacket-v3 is recommended for non-inline operation
+[1 - Suricata-Main] 2025-06-03 20:19:24 Info: runmodes: Going to use 4 ReceiveAFP receive thread(s)
+[1 - Suricata-Main] 2025-06-03 20:19:25 Notice: threads: Threads created -> RX: 4 W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-03 20:28:23 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-03 20:28:23 Info: suricata: time elapsed 538.997s
+[1 - Suricata-Main] 2025-06-03 20:28:24 Notice: device: eth0: packets: 12191, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-03 20:28:30 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-03 20:28:30 Error: detect-content: '\' has to be escaped
+[1 - Suricata-Main] 2025-06-03 20:28:30 Error: detect: error parsing signature "alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt";     flow:to_server,established;     content:"\x00\x00\x00\x00"; depth:4;     detection_filter: track by_src, count 1, seconds 1800;     sid:1000003; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 17
+[1 - Suricata-Main] 2025-06-03 20:28:30 Error: detect-parse: rule 1000004 setup buffer dns_query but didn't add matches to it
+[1 - Suricata-Main] 2025-06-03 20:28:30 Error: detect: error parsing signature "alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume";     dns.query; threshold:type threshold, track by_src, count 50, seconds 60;     sid:1000004; rev:1; classtype:trojan-activity; priority:1;)" from file /etc/suricata/rules/local.rules at line 24
+[1 - Suricata-Main] 2025-06-03 20:28:30 Error: detect-parse: unknown rule keyword 'tls.cipher_suite'.
+[1 - Suricata-Main] 2025-06-03 20:28:30 Error: detect: error parsing signature "alert tls any any -> $HOME_NET any (msg:"SSL/TLS Cipher Suite Downgrade Attempt";     tls.cipher_suite:0x0000;     detection_filter: track by_src, count 1, seconds 3600;     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 29
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: detect: 1 rule files processed. 7 rules successfully loaded, 3 rules failed, 0
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: detect: 7 signatures processed. 1 are IP-only rules, 0 are inspecting packet payload, 0 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-03 20:28:30 Warning: af-packet: eth0: tpacket v3 is only implemented for 'workers' runmode. Switching to tpacket v2.
+[1 - Suricata-Main] 2025-06-03 20:28:30 Warning: af-packet: eth0: AF_PACKET tpacket-v3 is recommended for non-inline operation
+[1 - Suricata-Main] 2025-06-03 20:28:30 Info: runmodes: Going to use 4 ReceiveAFP receive thread(s)
+[1 - Suricata-Main] 2025-06-03 20:28:31 Notice: threads: Threads created -> RX: 4 W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-03 20:41:26 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-03 20:41:26 Info: suricata: time elapsed 776.256s
+[1 - Suricata-Main] 2025-06-03 20:41:27 Notice: device: eth0: packets: 18638, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-03 20:41:41 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-03 20:41:41 Error: detect-content: '\' has to be escaped
+[1 - Suricata-Main] 2025-06-03 20:41:41 Error: detect: error parsing signature "alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt";     flow:to_server,established;     content:"\x00\x00\x00\x00"; depth:4;     detection_filter: track by_src, count 1, seconds 1800;     sid:1000003; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 17
+[1 - Suricata-Main] 2025-06-03 20:41:41 Error: detect-parse: rule 1000004 setup buffer dns_query but didn't add matches to it
+[1 - Suricata-Main] 2025-06-03 20:41:41 Error: detect: error parsing signature "alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume";     dns.query; threshold:type threshold, track by_src, count 50, seconds 60;     sid:1000004; rev:1; classtype:trojan-activity; priority:1;)" from file /etc/suricata/rules/local.rules at line 24
+[1 - Suricata-Main] 2025-06-03 20:41:41 Error: detect-parse: unknown rule keyword 'tls.cipher_suite'.
+[1 - Suricata-Main] 2025-06-03 20:41:41 Error: detect: error parsing signature "alert tls any any -> $HOME_NET any (msg:"SSL/TLS Cipher Suite Downgrade Attempt";     tls.cipher_suite:0x0000;     detection_filter: track by_src, count 1, seconds 3600;     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 29
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: detect: 1 rule files processed. 7 rules successfully loaded, 3 rules failed, 0
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: detect: 7 signatures processed. 1 are IP-only rules, 0 are inspecting packet payload, 0 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-03 20:41:41 Warning: af-packet: eth0: tpacket v3 is only implemented for 'workers' runmode. Switching to tpacket v2.
+[1 - Suricata-Main] 2025-06-03 20:41:41 Warning: af-packet: eth0: AF_PACKET tpacket-v3 is recommended for non-inline operation
+[1 - Suricata-Main] 2025-06-03 20:41:41 Info: runmodes: Going to use 4 ReceiveAFP receive thread(s)
+[1 - Suricata-Main] 2025-06-03 20:41:41 Notice: threads: Threads created -> RX: 4 W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-03 21:00:11 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-03 21:00:11 Info: suricata: time elapsed 1110.468s
+[1 - Suricata-Main] 2025-06-03 21:00:13 Notice: device: eth0: packets: 38035, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-03 21:00:37 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-03 21:00:37 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-03 21:00:37 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-03 21:00:38 Error: detect-content: '\' has to be escaped
+[1 - Suricata-Main] 2025-06-03 21:00:38 Error: detect: error parsing signature "alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt";     flow:to_server,established;     content:"\x00\x00\x00\x00"; depth:4;     detection_filter: track by_src, count 1, seconds 1800;     sid:1000003; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 17
+[1 - Suricata-Main] 2025-06-03 21:00:38 Error: detect-parse: rule 1000004 setup buffer dns_query but didn't add matches to it
+[1 - Suricata-Main] 2025-06-03 21:00:38 Error: detect: error parsing signature "alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume";     dns.query; threshold:type threshold, track by_src, count 50, seconds 60;     sid:1000004; rev:1; classtype:trojan-activity; priority:1;)" from file /etc/suricata/rules/local.rules at line 24
+[1 - Suricata-Main] 2025-06-03 21:00:38 Error: detect-parse: unknown rule keyword 'tls.cipher_suite'.
+[1 - Suricata-Main] 2025-06-03 21:00:38 Error: detect: error parsing signature "alert tls any any -> $HOME_NET any (msg:"SSL/TLS Cipher Suite Downgrade Attempt";     tls.cipher_suite:0x0000;     detection_filter: track by_src, count 1, seconds 3600;     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 29
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: detect: 1 rule files processed. 7 rules successfully loaded, 3 rules failed, 0
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: detect: 7 signatures processed. 1 are IP-only rules, 0 are inspecting packet payload, 0 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-03 21:00:38 Warning: af-packet: eth0: tpacket v3 is only implemented for 'workers' runmode. Switching to tpacket v2.
+[1 - Suricata-Main] 2025-06-03 21:00:38 Warning: af-packet: eth0: AF_PACKET tpacket-v3 is recommended for non-inline operation
+[1 - Suricata-Main] 2025-06-03 21:00:38 Info: runmodes: Going to use 4 ReceiveAFP receive thread(s)
+[1 - Suricata-Main] 2025-06-03 21:00:38 Notice: threads: Threads created -> RX: 4 W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-03 21:04:55 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-03 21:04:55 Info: suricata: time elapsed 257.179s
+[1 - Suricata-Main] 2025-06-03 21:04:56 Notice: device: eth0: packets: 6123, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-03 21:04:57 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-03 21:04:57 Error: detect-content: '\' has to be escaped
+[1 - Suricata-Main] 2025-06-03 21:04:57 Error: detect: error parsing signature "alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt";     flow:to_server,established;     content:"\x00\x00\x00\x00"; depth:4;     detection_filter: track by_src, count 1, seconds 1800;     sid:1000003; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 17
+[1 - Suricata-Main] 2025-06-03 21:04:57 Error: detect-parse: rule 1000004 setup buffer dns_query but didn't add matches to it
+[1 - Suricata-Main] 2025-06-03 21:04:57 Error: detect: error parsing signature "alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume";     dns.query; threshold:type threshold, track by_src, count 50, seconds 60;     sid:1000004; rev:1; classtype:trojan-activity; priority:1;)" from file /etc/suricata/rules/local.rules at line 24
+[1 - Suricata-Main] 2025-06-03 21:04:57 Error: detect-parse: unknown rule keyword 'tls.cipher_suite'.
+[1 - Suricata-Main] 2025-06-03 21:04:57 Error: detect: error parsing signature "alert tls any any -> $HOME_NET any (msg:"SSL/TLS Cipher Suite Downgrade Attempt";     tls.cipher_suite:0x0000;     detection_filter: track by_src, count 1, seconds 3600;     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)" from file /etc/suricata/rules/local.rules at line 29
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: detect: 1 rule files processed. 7 rules successfully loaded, 3 rules failed, 0
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-03 21:04:57 Info: detect: 7 signatures processed. 1 are IP-only rules, 0 are inspecting packet payload, 0 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-03 21:04:57 Warning: af-packet: eth0: tpacket v3 is only implemented for 'workers' runmode. Switching to tpacket v2.
+[1 - Suricata-Main] 2025-06-03 21:04:58 Warning: af-packet: eth0: AF_PACKET tpacket-v3 is recommended for non-inline operation
+[1 - Suricata-Main] 2025-06-03 21:04:58 Info: runmodes: Going to use 4 ReceiveAFP receive thread(s)
+[1 - Suricata-Main] 2025-06-03 21:04:58 Notice: threads: Threads created -> RX: 4 W: 4 FM: 1 FR: 1   Engine started.

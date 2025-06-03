@@ -21,7 +21,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('/app/responder.log')
+        logging.FileHandler('responder.log')
     ]
 )
 logger = logging.getLogger('responder')
@@ -37,7 +37,8 @@ def init_database():
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
     
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.execute('PRAGMA journal_mode=WAL;')
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -88,7 +89,8 @@ def block_ip(ip_address, reason):
             logger.error("IP inválida: %s", ip_address)
             return False
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(DB_PATH, timeout=10)
+        conn.execute('PRAGMA journal_mode=WAL;')
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM blocked_ips WHERE ip_address = ?", (ip_address,))
         if cursor.fetchone():
@@ -294,7 +296,8 @@ def process_alert(alert_data):
                     action_taken = f"Blocked source IP: {src_ip}"
         
         # Insertar en la tabla alerts
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(DB_PATH, timeout=10)
+        conn.execute('PRAGMA journal_mode=WAL;')
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -349,7 +352,8 @@ app = Flask(__name__)
 
 @app.route('/alerts', methods=['GET'])
 def get_alerts():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.execute('PRAGMA journal_mode=WAL;')
     cursor = conn.cursor()
     cursor.execute(
         "SELECT timestamp, src_ip, dest_ip, alert_message, severity, action_taken "
@@ -368,6 +372,19 @@ def get_alerts():
             'action_taken': row[5]
         })
     return jsonify(alerts_list)
+
+@app.route('/api/block-ip', methods=['POST'])
+def api_block_ip():
+    data = request.get_json()
+    ip = data.get('ip_address')
+    reason = data.get('reason', 'manual')
+    if not ip or not validate_ip(ip):
+        return jsonify({'success': False, 'message': 'IP inválida'}), 400
+    result = block_ip(ip, reason)
+    if result:
+        return jsonify({'success': True, 'message': f'IP {ip} bloqueada'}), 200
+    else:
+        return jsonify({'success': False, 'message': f'No se pudo bloquear la IP {ip} (puede que ya esté bloqueada o error interno)'}), 500
 
 def run_flask():
     """Inicia el servidor Flask en un thread aparte."""

@@ -65,7 +65,11 @@ if ($source_ip) {
                     <i class="fas fa-bolt"></i> Alerta #<?= htmlspecialchars($alert['id']) ?>
                 </div>
                 <div class="alert-card-body">
-                    <div class="alert-detail-row"><span class="alert-detail-label">Fecha/Hora:</span><span><?= date('d-m-Y H:i', strtotime($alert['timestamp'])) ?></span></div>
+                    <div class="alert-detail-row"><span class="alert-detail-label">Fecha/Hora:</span><span><?php
+    $date = new DateTime($alert['timestamp'], new DateTimeZone('UTC'));
+    $date->setTimezone(new DateTimeZone('Europe/Madrid'));
+    echo $date->format('d-m-Y H:i');
+?></span></div>
                     <div class="alert-detail-row"><span class="alert-detail-label">IP Origen:</span><span><?= htmlspecialchars($alert['source_ip']) ?></span></div>
                     <div class="alert-detail-row"><span class="alert-detail-label">IP Destino:</span><span><?= htmlspecialchars($alert['destination_ip']) ?></span></div>
                     <div class="alert-detail-row"><span class="alert-detail-label">Puerto:</span><span><?= !empty($alert['dest_port']) ? htmlspecialchars($alert['dest_port']) : 'N/A' ?></span></div>
@@ -88,7 +92,11 @@ if ($source_ip) {
                     <tbody>
                     <?php foreach ($history as $h): ?>
                         <tr>
-                            <td><?= date('d-m-Y H:i', strtotime($h['timestamp'])) ?></td>
+                            <td><?php
+    $date = new DateTime($h['timestamp'], new DateTimeZone('UTC'));
+    $date->setTimezone(new DateTimeZone('Europe/Madrid'));
+    echo $date->format('d-m-Y H:i');
+?></td>
                             <td><?= htmlspecialchars($h['alert_message']) ?></td>
                             <td><span class="severity-badge severity-<?= (int)$h['severity'] ?>"><?= htmlspecialchars($h['severity']) ?></span></td>
                             <td><?= htmlspecialchars($h['destination_ip']) ?><?= !empty($h['dest_port']) ? ':' . htmlspecialchars($h['dest_port']) : '' ?></td>
