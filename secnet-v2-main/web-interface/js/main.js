@@ -1,7 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar gráficos
-    initCharts();
-    
     // Configurar botón de bloqueo de IP
     const blockButtons = document.querySelectorAll('.block-button');
     blockButtons.forEach(button => {
@@ -127,9 +124,10 @@ function isRelevantAlert(alert) {
             return false;
         }
         
-        // Marcar como crítica y reducir severidad para alertas internas
+        // Marcar como crítica pero mantener la severidad original
         alert.is_critical = true;
-        alert.severity = 1;
+        // No sobrescribir la severidad: mantener la que viene del servidor
+        // alert.severity = 1; // Eliminado para mantener la severidad original
     }
     
     // Ignorar alertas muy antiguas
@@ -435,7 +433,7 @@ function updateAlertUI(alert) {
         <td>${alert.destination_ip || ''}</td>
         <td>${alert.alert_message}</td>
         <td>${alert.protocol || 'unknown'}</td>
-        <td class="severity ${severity.toLowerCase()}">${alert.severity}</td>
+        <td class="severity ${severity.toLowerCase()}">${severity}</td>
         <td>${alert.action_taken || 'none'}</td>
         <td>
             <button class="action-btn alerta details-button" onclick="viewAlertDetails(${alert.id})">

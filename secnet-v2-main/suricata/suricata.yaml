@@ -6,7 +6,7 @@
 # ================================
 
 # 1. Run Mode Configuration
-runmode: autofp
+runmode: workers
 
 # 2. Logging
 logging:

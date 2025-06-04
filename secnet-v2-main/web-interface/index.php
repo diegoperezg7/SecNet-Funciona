@@ -8,11 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Añadir audio para alertas -->
-    <audio id="alertSound" preload="auto">
-        <source src="sounds/alert.mp3" type="audio/mpeg">
-    </audio>
-    <!-- Tipografía tecnológica para títulos -->
+<!-- Tipografía tecnológica para títulos -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 </head>
 <body>

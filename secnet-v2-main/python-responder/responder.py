@@ -29,7 +29,7 @@ logger = logging.getLogger('responder')
 # ----------------------------------------
 # Rutas y esquemas de base de datos
 # ----------------------------------------
-DB_PATH = './database/alerts.db'
+DB_PATH = '/app/database/alerts.db'
 
 def init_database():
     """Inicializa la base de datos SQLite si no existe."""
@@ -213,11 +213,11 @@ def classify_alert(alert_data):
     alert_msg = alert_data.get('alert', {}).get('signature', '')
     priority = int(alert_data.get('alert', {}).get('priority', 3))  # Por defecto baja
     
-    # Mapeo de prioridad de Suricata a severidad
-    # priority 1 = severidad 3 (alta)
-    # priority 2 = severidad 2 (media)
-    # priority 3 = severidad 1 (baja)
-    severity = 4 - priority
+    # Usamos la severidad directamente del JSON
+    # severity 1 = Baja
+    # severity 2 = Media
+    # severity 3 = Alta
+    severity = int(alert_data.get('alert', {}).get('severity', 1))  # Por defecto baja severidad
     
     # --- HTTP interno: siempre severidad 1 ---
     if 'http' in alert_msg.lower():
@@ -240,11 +240,11 @@ def classify_alert(alert_data):
         return 'Tráfico legítimo externo', 1
         
     # --- Clasificar según severidad ---
-    if severity == 3:
+    if severity == 3:  # Alta severidad
         return 'Amenaza confirmada', severity
-    elif severity == 2:
+    elif severity == 2:  # Media severidad
         return 'Actividad sospechosa', severity
-    else:
+    else:  # Baja severidad (1)
         return 'Actividad normal', severity
 
 def process_alert(alert_data):
@@ -385,6 +385,37 @@ def api_block_ip():
         return jsonify({'success': True, 'message': f'IP {ip} bloqueada'}), 200
     else:
         return jsonify({'success': False, 'message': f'No se pudo bloquear la IP {ip} (puede que ya esté bloqueada o error interno)'}), 500
+
+@app.route('/api/unblock-ip', methods=['POST'])
+def api_unblock_ip():
+    data = request.get_json()
+    ip = data.get('ip_address')
+    if not ip or not validate_ip(ip):
+        return jsonify({'success': False, 'message': 'IP inválida'}), 400
+    
+    # Verificar si la IP está realmente bloqueada antes de intentar desbloquear
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.execute('PRAGMA journal_mode=WAL;')
+    cursor = conn.cursor()
+    cursor.execute("SELECT ip_address FROM blocked_ips WHERE ip_address = ?", (ip,))
+    is_blocked_in_db = cursor.fetchone()
+    conn.close()
+
+    if not is_blocked_in_db:
+        # Si no está en la BD, intentamos quitarla de iptables por si acaso quedó alguna regla huérfana
+        # pero informamos que no estaba en la BD.
+        unblock_result = unblock_ip(ip) # unblock_ip ya maneja iptables y BD
+        if unblock_result:
+            return jsonify({'success': True, 'message': f'IP {ip} desbloqueada (no estaba en la base de datos pero se intentó limpiar de iptables)'}), 200
+        else:
+            return jsonify({'success': False, 'message': f'IP {ip} no encontrada en la base de datos y no se pudo limpiar de iptables (o no existía regla)'}), 404
+
+    # Si está en la BD, proceder con el desbloqueo normal
+    result = unblock_ip(ip)
+    if result:
+        return jsonify({'success': True, 'message': f'IP {ip} desbloqueada correctamente'}), 200
+    else:
+        return jsonify({'success': False, 'message': f'No se pudo desbloquear la IP {ip} (error interno)'}), 500
 
 def run_flask():
     """Inicia el servidor Flask en un thread aparte."""

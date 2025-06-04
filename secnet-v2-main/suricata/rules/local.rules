@@ -16,18 +16,19 @@ alert tcp any any -> $HOME_NET 80 (msg:"Nmap HTTP Scan"; \
 # 3) SMB Enumeration Attempt → 1 alerta cada 30 min por origen
 alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt"; \
     flow:to_server,established; \
-    content:"\x00\x00\x00\x00"; depth:4; \
+    content:"|00 00 00 00|"; depth:4; \
     detection_filter: track by_src, count 1, seconds 1800; \
     sid:1000003; rev:2; classtype:attempted-admin; priority:2;)
 
-# 4) High DNS Query Volume → 1 alerta cada 10 min por origen (ya lleva threshold)
+# 4) High DNS Query Volume → 1 alerta cada 10 min por origen
 alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume"; \
-    dns.query; threshold:type threshold, track by_src, count 50, seconds 60; \
+    content:"|01 00 01 00 00 01 00 00 00 00 00 00|"; depth:12; \
+    threshold: type threshold, track by_src, count 50, seconds 60; \
     sid:1000004; rev:1; classtype:trojan-activity; priority:1;)
 
 # 5) SSL/TLS Cipher Suite Downgrade → solo 1 alerta cada hora
-alert tls any any -> $HOME_NET any (msg:"SSL/TLS Cipher Suite Downgrade Attempt"; \
-    tls.cipher_suite:0x0000; \
+alert tls any any -> $HOME_NET any (msg:"SSL/TLS Connection Attempt"; \
+    flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 3600; \
     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)
 

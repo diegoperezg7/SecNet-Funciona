@@ -71,29 +71,40 @@
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="alertsTableBody">
                             <?php
                             $db = new SQLite3('/var/www/html/database/alerts.db');
                             // Configurar zona horaria para SQLite
                             $db->exec("PRAGMA timezone = 'Europe/Madris'");
                             
+                            // Obtener el offset para la paginación
+                            $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+                            $limit = 30; // Número de alertas por página
+                            
                             $query = "SELECT * FROM alerts WHERE 1=1";
+                            $countQuery = "SELECT COUNT(*) as total FROM alerts WHERE 1=1";
                             $params = [];
+                            
                             if (isset($_GET['severity']) && $_GET['severity'] !== '') {
                                 if ($_GET['severity'] == '1') {
                                     $query .= " AND severity = 1";
+                                    $countQuery .= " AND severity = 1";
                                 } else {
                                     $query .= " AND severity >= 2";
+                                    $countQuery .= " AND severity >= 2";
                                 }
                             }
                             if (isset($_GET['ip']) && $_GET['ip'] !== '') {
                                 $ip = $_GET['ip'];
                                 $query .= " AND (source_ip LIKE :ip OR destination_ip LIKE :ip)";
+                                $countQuery .= " AND (source_ip LIKE :ip OR destination_ip LIKE :ip)";
                                 $params[':ip'] = "%$ip%";
                             }
                             if (isset($_GET['timeframe']) && $_GET['timeframe'] !== '') {
                                 $hours = intval($_GET['timeframe']);
-                                $query .= " AND timestamp > datetime('now', '-$hours hours', 'localtime')";
+                                $timeCondition = " AND timestamp > datetime('now', '-$hours hours', 'localtime')";
+                                $query .= $timeCondition;
+                                $countQuery .= $timeCondition;
                                 // Convertir a timestamp Unix para el frontend
                                 $timeLimit = strtotime("-$hours hours");
                                 $MIN_ALERT_TIMESTAMP = $timeLimit;
@@ -101,20 +112,40 @@
                                 // Si no hay filtro de tiempo, no aplicar límite
                                 $MIN_ALERT_TIMESTAMP = null;
                             }
-                            $query .= " ORDER BY timestamp DESC LIMIT 100";
+                            
+                            // Obtener el total de alertas
+                            $stmt = $db->prepare($countQuery);
+                            foreach ($params as $key => $value) {
+                                $stmt->bindValue($key, $value, SQLITE3_TEXT);
+                            }
+                            $totalAlerts = $stmt->execute()->fetchArray(SQLITE3_ASSOC)['total'];
+                            
+                            // Aplicar ordenación y límites
+                            $query .= " ORDER BY timestamp DESC LIMIT $limit OFFSET $offset";
+                            
                             $stmt = $db->prepare($query);
                             foreach ($params as $key => $value) {
                                 $stmt->bindValue($key, $value, SQLITE3_TEXT);
                             }
                             $results = $stmt->execute();
+                            $alertCount = 0;
+                            
                             while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-                                $severity_class = ($row['severity'] >= 2) ? 'high' : (($row['severity'] == 1) ? 'medium' : 'low');
+                                $alertCount++;
+                                // Asignar clases de severidad según la escala:
+                                // 3: Alta, 2: Media, 1: Baja
+                                $severity_class = 'low';
+                                if ($row['severity'] == 2) {
+                                    $severity_class = 'medium';
+                                } elseif ($row['severity'] >= 3) {
+                                    $severity_class = 'high';
+                                }
                                 echo '<tr>';
                                 echo '<td>' . $row['id'] . '</td>';
                                 // Convertir la fecha/hora a la zona horaria de Madrid
                                 $date = new DateTime($row['timestamp'], new DateTimeZone('UTC'));
                                 $date->setTimezone(new DateTimeZone('Europe/Madrid'));
-                                echo '<td>' . $date->format('d-m-Y H:i') . '</td>';
+                                echo '<td data-timestamp="' . strtotime($row['timestamp']) . '">' . $date->format('d-m-Y H:i') . '</td>';
                                 echo '<td>' . htmlspecialchars($row['source_ip']) . '</td>';
                                 echo '<td>' . htmlspecialchars($row['destination_ip']) . '</td>';
                                 echo '<td>' . htmlspecialchars($row['alert_message']) . '</td>';
@@ -128,9 +159,22 @@
                                 echo '</tr>';
                             }
                             $db->close();
+                            
+                            // Guardar el último timestamp para la paginación
+                            $hasMoreAlerts = ($offset + $alertCount) < $totalAlerts;
                             ?>
                         </tbody>
                     </table>
+                    <?php if ($hasMoreAlerts): ?>
+                    <div class="load-more-container">
+                        <button id="loadMoreBtn" class="load-more-btn" data-offset="<?php echo $offset + $limit; ?>">
+                            <i class="fas fa-arrow-down"></i> Ver más alertas
+                        </button>
+                        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando...
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
         </main>
@@ -138,6 +182,44 @@
             <p>&copy; <?php echo date('Y'); ?> Sistema Automatizado de Respuesta a Incidentes</p>
         </footer>
     </div>
+    <style>
+        .load-more-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .load-more-btn {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .load-more-btn:hover {
+            background-color: #1a252f;
+        }
+        
+        .load-more-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            color: #7f8c8d;
+        }
+        
+        .loading-indicator i {
+            margin-right: 8px;
+        }
+    </style>
     <script src="js/main.js"></script>
     <script>
         // Hacer las funciones disponibles globalmente
@@ -176,10 +258,76 @@
         const toggleBtn = document.getElementById('toggleFiltersBtn');
         const filtersPanel = document.getElementById('filtersPanel');
         let filtersOpen = false;
-        toggleBtn.addEventListener('click', () => {
-            filtersOpen = !filtersOpen;
-            filtersPanel.style.display = filtersOpen ? 'flex' : 'none';
-            toggleBtn.innerHTML = filtersOpen ? '<i class="fas fa-times"></i> Cerrar filtros' : '<i class="fas fa-sliders-h"></i> Filtrar';
+        
+        if (toggleBtn && filtersPanel) {
+            toggleBtn.addEventListener('click', () => {
+                filtersOpen = !filtersOpen;
+                filtersPanel.style.display = filtersOpen ? 'flex' : 'none';
+                toggleBtn.innerHTML = filtersOpen ? '<i class="fas fa-times"></i> Cerrar filtros' : '<i class="fas fa-sliders-h"></i> Filtrar';
+            });
+        }
+        
+        // Función para cargar más alertas
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', function() {
+                    const offset = parseInt(this.getAttribute('data-offset'));
+                    const loadingIndicator = document.getElementById('loadingIndicator');
+                    const tableBody = document.getElementById('alertsTableBody');
+                    
+                    // Mostrar indicador de carga y deshabilitar el botón
+                    loadMoreBtn.style.display = 'none';
+                    loadingIndicator.style.display = 'block';
+                    
+                    // Construir la URL con los parámetros actuales
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('offset', offset);
+                    
+                    // Realizar la petición AJAX
+                    fetch(`alerts.php?${urlParams.toString()}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            // Crear un elemento temporal para parsear el HTML
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = html;
+                            
+                            // Extraer las filas de la tabla
+                            const newTableBody = tempDiv.querySelector('#alertsTableBody');
+                            if (!newTableBody) {
+                                throw new Error('No se pudo encontrar el cuerpo de la tabla en la respuesta');
+                            }
+                            
+                            // Agregar las nuevas filas a la tabla
+                            const newRows = Array.from(newTableBody.querySelectorAll('tr'));
+                            newRows.forEach(row => {
+                                tableBody.appendChild(row.cloneNode(true));
+                            });
+                            
+                            // Actualizar el botón de cargar más
+                            const newLoadMoreBtn = tempDiv.querySelector('.load-more-btn');
+                            if (newLoadMoreBtn) {
+                                loadMoreBtn.setAttribute('data-offset', newLoadMoreBtn.getAttribute('data-offset'));
+                                loadMoreBtn.style.display = 'inline-block';
+                            } else {
+                                loadMoreBtn.parentNode.remove();
+                            }
+                            
+                            loadingIndicator.style.display = 'none';
+                            
+                            // Desplazarse suavemente a la primera nueva alerta
+                            if (newRows.length > 0) {
+                                newRows[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error al cargar más alertas:', error);
+                            alert('Error al cargar más alertas. Por favor, inténtalo de nuevo.');
+                            loadMoreBtn.style.display = 'inline-block';
+                            loadingIndicator.style.display = 'none';
+                        });
+                });
+            }
         });
     </script>
 </body>
