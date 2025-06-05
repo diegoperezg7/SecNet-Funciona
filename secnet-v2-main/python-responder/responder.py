@@ -29,7 +29,12 @@ logger = logging.getLogger('responder')
 # ----------------------------------------
 # Rutas y esquemas de base de datos
 # ----------------------------------------
-DB_PATH = '/app/database/alerts.db'
+DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database')
+DB_PATH = os.path.join(DB_DIR, 'alerts.db')
+
+# Asegurarse de que el directorio de la base de datos existe
+os.makedirs(DB_DIR, exist_ok=True)
+os.chmod(DB_DIR, 0o777)  # Asegurar permisos de escritura
 
 def init_database():
     """Inicializa la base de datos SQLite si no existe."""
@@ -105,21 +110,35 @@ def validate_ip(ip_address):
 # Funciones de bloqueo/desbloqueo de IP
 # ----------------------------------------
 def block_ip(ip_address, reason):
-    """Bloquea una IP usando iptables y la registra en la BD."""
+    """
+    Bloquea una IP usando iptables y la registra en la BD.
+    
+    Args:
+        ip_address (str): La dirección IP a bloquear
+        reason (str): Razón del bloqueo
+        
+    Returns:
+        bool: True si el bloqueo fue exitoso, False en caso contrario
+    """
     try:
+        logger.info(f"Intentando bloquear IP: {ip_address} - Razón: {reason}")
         if not validate_ip(ip_address):
             logger.error("IP inválida: %s", ip_address)
             return False
         
+        # Conectar a la base de datos
         conn = sqlite3.connect(DB_PATH, timeout=10)
         conn.execute('PRAGMA journal_mode=WAL;')
         cursor = conn.cursor()
+        
+        # Verificar si la IP ya está bloqueada en la base de datos
         cursor.execute("SELECT * FROM blocked_ips WHERE ip_address = ?", (ip_address,))
         if cursor.fetchone():
-            logger.info("IP %s ya está bloqueada (registro encontrado)", ip_address)
+            logger.info("IP %s ya está bloqueada (registro encontrado en BD)", ip_address)
             conn.close()
-            return False
+            return True  # Ya está bloqueada, devolvemos True
         
+        # Registrar el bloqueo en la base de datos
         timestamp = datetime.now().isoformat()
         cursor.execute(
             "INSERT INTO blocked_ips (ip_address, timestamp, reason) VALUES (?, ?, ?)",
@@ -128,88 +147,145 @@ def block_ip(ip_address, reason):
         conn.commit()
         conn.close()
         
-        try:
-            # Verificar si ya existe la regla en INPUT
-            check_cmd = ["iptables", "-C", "INPUT", "-s", ip_address, "-j", "DROP"]
-            result = subprocess.run(check_cmd, capture_output=True, text=True)
-            if result.returncode != 0:
-                # Añadir regla en INPUT
-                block_cmd = ["iptables", "-A", "INPUT", "-s", ip_address, "-j", "DROP"]
-                subprocess.run(block_cmd, check=True)
-                # Añadir regla en OUTPUT
-                block_output_cmd = ["iptables", "-A", "OUTPUT", "-d", ip_address, "-j", "DROP"]
-                subprocess.run(block_output_cmd, check=True)
-                # Guardar reglas persistentes
-                save_cmd = ["netfilter-persistent", "save"]
-                subprocess.run(save_cmd, check=True)
-                logger.info("IP %s bloqueada correctamente", ip_address)
-                return True
-            else:
-                logger.info("IP %s ya estaba bloqueada en iptables", ip_address)
-                return True
-        except subprocess.CalledProcessError as e:
-            logger.error("Error al ejecutar iptables: %s", e)
-            # Intentar con sudo
+        # Función para ejecutar comandos con manejo de errores
+        def run_command(cmd, use_sudo=False):
             try:
-                sudo_block_cmd = ["sudo", "iptables", "-A", "INPUT", "-s", ip_address, "-j", "DROP"]
-                subprocess.run(sudo_block_cmd, check=True)
-                sudo_block_output_cmd = ["sudo", "iptables", "-A", "OUTPUT", "-d", ip_address, "-j", "DROP"]
-                subprocess.run(sudo_block_output_cmd, check=True)
-                sudo_save_cmd = ["sudo", "netfilter-persistent", "save"]
-                subprocess.run(sudo_save_cmd, check=True)
-                logger.info("IP %s bloqueada correctamente con sudo", ip_address)
-                return True
-            except subprocess.CalledProcessError as e2:
-                logger.error("Error al ejecutar iptables con sudo: %s", e2)
-                return False
+                # Si es un comando de iptables, usamos docker para ejecutarlo en el host
+                if cmd[0] == 'iptables' or (len(cmd) > 1 and 'iptables' in cmd[1]):
+                    docker_cmd = ["docker", "run", "--rm", "--privileged", "--net=host"]
+                    if use_sudo:
+                        docker_cmd.extend(["-v", "/usr/bin/sudo:/usr/bin/sudo"])
+                        cmd = ["sudo"] + cmd
+                    docker_cmd.extend(["alpine:latest"] + cmd)
+                    cmd = docker_cmd
+                elif use_sudo:
+                    cmd = ["sudo"] + cmd
+                
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                return True, result
+            except subprocess.CalledProcessError as e:
+                logger.error("Error al ejecutar comando %s: %s", " ".join(cmd), e.stderr or str(e))
+                return False, e
+        
+        # Comandos para bloquear la IP
+        iptables_cmds = [
+            # Bloquear tráfico entrante
+            ["iptables", "-I", "INPUT", "1", "-s", ip_address, "-j", "DROP"],
+            # Bloquear tráfico saliente
+            ["iptables", "-I", "OUTPUT", "1", "-d", ip_address, "-j", "DROP"],
+            # Bloquear en la cadena DOCKER-USER si existe (para entornos Docker)
+            ["sh", "-c", f"iptables -C DOCKER-USER -j RETURN 2>/dev/null && iptables -I DOCKER-USER 1 -s {ip_address} -j DROP || true"],
+            # Guardar reglas persistentemente si netfilter-persistent está disponible
+            ["which", "netfilter-persistent"],
+        ]
+        
+        # Ejecutar comandos de bloqueo
+        for cmd in iptables_cmds:
+            success, _ = run_command(cmd)
+            if not success and not cmd[0] == 'which':  # Ignorar fallos en la verificación de netfilter-persistent
+                # Intentar con sudo
+                success_sudo, _ = run_command(cmd, use_sudo=True)
+                if not success_sudo:
+                    logger.error("No se pudo ejecutar el comando con sudo: %s", " ".join(cmd))
+        
+        # Si netfilter-persistent está disponible, guardar las reglas
+        if run_command(["which", "netfilter-persistent"])[0]:
+            save_cmd = ["netfilter-persistent", "save"]
+            success, _ = run_command(save_cmd)
+            if not success:
+                run_command(save_cmd, use_sudo=True)
+        else:
+            # Alternativa para guardar reglas manualmente
+            save_manual = ["sh", "-c", "iptables-save > /etc/iptables/rules.v4"]
+            success, _ = run_command(save_manual)
+            if not success:
+                run_command(save_manual, use_sudo=True)
+        
+        logger.info("IP %s bloqueada correctamente en todas las cadenas", ip_address)
+        return True
+        
     except Exception as e:
-        logger.error("Error en block_ip(): %s", e)
+        logger.error("Error en block_ip() para IP %s: %s", ip_address, str(e), exc_info=True)
         return False
 
 def unblock_ip(ip_address):
-    """Desbloquea una IP de iptables y la elimina de la BD."""
+    """
+    Desbloquea una IP de iptables y la elimina de la BD.
+    
+    Args:
+        ip_address (str): La dirección IP a desbloquear
+        
+    Returns:
+        bool: True si el desbloqueo fue exitoso, False en caso contrario
+    """
     try:
-        try:
-            # Eliminar regla INPUT
-            unblock_input_cmd = ["iptables", "-D", "INPUT", "-s", ip_address, "-j", "DROP"]
-            subprocess.run(unblock_input_cmd, check=True)
-            # Eliminar regla OUTPUT
-            unblock_output_cmd = ["iptables", "-D", "OUTPUT", "-d", ip_address, "-j", "DROP"]
-            subprocess.run(unblock_output_cmd, check=True)
-            # Guardar cambios
+        if not validate_ip(ip_address):
+            logger.error("IP inválida: %s", ip_address)
+            return False
+            
+        # Función para ejecutar comandos con manejo de errores
+        def run_command(cmd, use_sudo=False):
+            try:
+                if use_sudo:
+                    cmd = ["sudo"] + cmd
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                return True, result
+            except subprocess.CalledProcessError as e:
+                # Ignorar errores de reglas que no existen
+                if "does a matching" in (e.stderr or "") or "Bad rule" in (e.stderr or ""):
+                    return True, None
+                logger.error("Error al ejecutar comando %s: %s", " ".join(cmd), e.stderr or str(e))
+                return False, e
+        
+        # Comandos para desbloquear la IP
+        iptables_cmds = [
+            # Eliminar reglas de bloqueo entrante (todas las ocurrencias)
+            ["sh", "-c", f"while iptables -D INPUT -s {ip_address} -j DROP 2>/dev/null; do :; done"],
+            # Eliminar reglas de bloqueo saliente (todas las ocurrencias)
+            ["sh", "-c", f"while iptables -D OUTPUT -d {ip_address} -j DROP 2>/dev/null; do :; done"],
+            # Eliminar reglas de la cadena DOCKER-USER si existen
+            ["sh", "-c", f"iptables -C DOCKER-USER -j RETURN 2>/dev/null && while iptables -D DOCKER-USER -s {ip_address} -j DROP 2>/dev/null; do :; done || true"],
+        ]
+        
+        # Ejecutar comandos de desbloqueo
+        for cmd in iptables_cmds:
+            success, _ = run_command(cmd)
+            if not success:
+                # Intentar con sudo
+                success_sudo, _ = run_command(cmd, use_sudo=True)
+                if not success_sudo:
+                    logger.error("No se pudo ejecutar el comando con sudo: %s", " ".join(cmd))
+        
+        # Guardar cambios si netfilter-persistent está disponible
+        if run_command(["which", "netfilter-persistent"])[0]:
             save_cmd = ["netfilter-persistent", "save"]
-            subprocess.run(save_cmd, check=True)
-            # Eliminar de la base de datos
-            conn = sqlite3.connect(DB_PATH)
+            success, _ = run_command(save_cmd)
+            if not success:
+                run_command(save_cmd, use_sudo=True)
+        else:
+            # Alternativa para guardar reglas manualmente
+            save_manual = ["sh", "-c", "iptables-save > /etc/iptables/rules.v4"]
+            success, _ = run_command(save_manual)
+            if not success:
+                run_command(save_manual, use_sudo=True)
+        
+        # Eliminar de la base de datos
+        try:
+            conn = sqlite3.connect(DB_PATH, timeout=10)
             cursor = conn.cursor()
             cursor.execute("DELETE FROM blocked_ips WHERE ip_address = ?", (ip_address,))
             conn.commit()
             conn.close()
-            logger.info("IP %s desbloqueada correctamente", ip_address)
-            return True
-        except subprocess.CalledProcessError as e:
-            logger.error("Error al ejecutar iptables: %s", e)
-            # Intentar con sudo
-            try:
-                sudo_unblock_input_cmd = ["sudo", "iptables", "-D", "INPUT", "-s", ip_address, "-j", "DROP"]
-                subprocess.run(sudo_unblock_input_cmd, check=True)
-                sudo_unblock_output_cmd = ["sudo", "iptables", "-D", "OUTPUT", "-d", ip_address, "-j", "DROP"]
-                subprocess.run(sudo_unblock_output_cmd, check=True)
-                sudo_save_cmd = ["sudo", "netfilter-persistent", "save"]
-                subprocess.run(sudo_save_cmd, check=True)
-                # Eliminar de la base de datos
-                conn = sqlite3.connect(DB_PATH)
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM blocked_ips WHERE ip_address = ?", (ip_address,))
-                conn.commit()
-                conn.close()
-                logger.info("IP %s desbloqueada correctamente con sudo", ip_address)
-                return True
-            except subprocess.CalledProcessError as e2:
-                logger.error("Error al ejecutar iptables con sudo: %s", e2)
-                return False
+            logger.info("IP %s eliminada de la base de datos", ip_address)
+        except Exception as db_error:
+            logger.error("Error al eliminar IP %s de la base de datos: %s", ip_address, db_error)
+            # Continuar aunque falle la BD
+        
+        logger.info("IP %s desbloqueada correctamente en todas las cadenas", ip_address)
+        return True
+        
     except Exception as e:
-        logger.error("Error en unblock_ip(): %s", e)
+        logger.error("Error en unblock_ip() para IP %s: %s", ip_address, str(e), exc_info=True)
         return False
 
 # ----------------------------------------
@@ -235,13 +311,13 @@ def classify_alert(alert_data):
     alert_msg = alert_data.get('alert', {}).get('signature', '')
     priority = int(alert_data.get('alert', {}).get('priority', 3))  # Por defecto baja
     
-    # Usamos la severidad directamente del JSON
+    # Usamos la gravedad directamente del JSON
     # severity 1 = Baja
     # severity 2 = Media
     # severity 3 = Alta
-    severity = int(alert_data.get('alert', {}).get('severity', 1))  # Por defecto baja severidad
+    severity = int(alert_data.get('alert', {}).get('severity', 1))  # Por defecto baja gravedad
     
-    # --- HTTP interno: siempre severidad 1 ---
+    # --- HTTP interno: siempre gravedad 1 ---
     if 'http' in alert_msg.lower():
         if ((src_ip in LOCAL_IPS or src_ip in SAFE_IPS) and
             (dest_ip in LOCAL_IPS or dest_ip in SAFE_IPS)):
@@ -261,12 +337,12 @@ def classify_alert(alert_data):
     if src_ip in SAFE_IPS:
         return 'Tráfico legítimo externo', 1
         
-    # --- Clasificar según severidad ---
-    if severity == 3:  # Alta severidad
+    # --- Clasificar según gravedad ---
+    if severity == 3:  # Alta gravedad
         return 'Amenaza confirmada', severity
-    elif severity == 2:  # Media severidad
+    elif severity == 2:  # Media gravedad
         return 'Actividad sospechosa', severity
-    else:  # Baja severidad (1)
+    else:  # Baja gravedad (1)
         return 'Actividad normal', severity
 
 def parse_suricata_timestamp(timestamp_str):
@@ -296,11 +372,14 @@ def parse_suricata_timestamp(timestamp_str):
 def process_alert(alert_data):
     """Procesa una alerta de Suricata y toma las acciones necesarias."""
     try:
+        logger.info(f"Procesando alerta: {json.dumps(alert_data, indent=2)}")
+        
         # Obtener y formatear el timestamp
         timestamp_str = alert_data.get('timestamp')
-        if timestamp_str:
-            timestamp = parse_suricata_timestamp(timestamp_str)
-        else:
+        try:
+            timestamp = parse_suricata_timestamp(timestamp_str) if timestamp_str else datetime.now()
+        except Exception as e:
+            logger.error(f"Error parseando timestamp {timestamp_str}: {e}")
             timestamp = datetime.now()
         
         src_ip = alert_data.get('src_ip', 'unknown')
@@ -324,59 +403,85 @@ def process_alert(alert_data):
         
         alert_message = alert_data.get('alert', {}).get('signature', 'Unknown alert')
         protocol = alert_data.get('proto', 'unknown')
-        categoria, nueva_severidad = classify_alert(alert_data)
+        categoria, nueva_gravedad = classify_alert(alert_data)
         
-        # Determinar acción según categoría/severidad
-        if categoria == 'HTTP interno bajo':
+        # Determinar acción según categoría/gravedad
+        if categoria == 'Tráfico interno seguro':
+            severity = 1
+            action_taken = "Tráfico interno seguro"
+            logger.info("Registrando tráfico interno seguro: %s de %s a %s", alert_message, src_ip, dest_ip)
+        elif categoria == 'HTTP interno bajo':
             severity = 1
             action_taken = "Tráfico HTTP interno registrado"
-        elif categoria == 'Tráfico interno seguro':
-            logger.info("Ignorado: %s de %s a %s (tráfico interno seguro)", alert_message, src_ip, dest_ip)
-            return
         elif categoria == 'Tráfico legítimo externo':
             severity = 1
             action_taken = "Tráfico legítimo externo registrado"
         else:
-            severity = nueva_severidad
-            action_taken = "Logged only"
+            severity = nueva_gravedad
+            action_taken = "Registrado"
             
-            # Bloquear IPs maliciosas
-            if ((categoria == 'Amenaza confirmada') or
-                (categoria == 'Actividad sospechosa' and severity >= 2)) and \
-               (src_ip not in LOCAL_IPS and src_ip not in SAFE_IPS):
+            # Bloquear IPs maliciosas - Solo para gravedad 2 o 3
+            should_block = (
+                severity in [2, 3] and  # Solo bloquear si la gravedad es 2 o 3
+                src_ip and
+                src_ip not in LOCAL_IPS and 
+                src_ip not in SAFE_IPS
+            )
+            
+            # Debug: Mostrar información sobre la decisión de bloqueo
+            logger.info(f"Evaluando bloqueo para {src_ip}: categoria={categoria}, gravedad={severity}, should_block={should_block}")
+            
+            if should_block:
+                # Verificar si la IP ya está bloqueada antes de intentar bloquearla
                 if block_ip(src_ip, f"{alert_message} [{categoria}]"):
-                    action_taken = f"Blocked source IP: {src_ip}"
+                    action_taken = f"IP Bloqueada: {src_ip}"
+                    logger.warning(f"IP bloqueada automáticamente: {src_ip} - Razón: {alert_message}")
+                else:
+                    action_taken = f"Error bloqueando IP: {src_ip}"
+                    logger.error(f"No se pudo bloquear la IP: {src_ip}")
         
         # Obtener puertos
         src_port = alert_data.get('src_port', '')
         dest_port = alert_data.get('dest_port', '')
         
         # Insertar en la tabla alerts
-        conn = sqlite3.connect(DB_PATH, timeout=10)
-        conn.execute('PRAGMA journal_mode=WAL;')
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO alerts (
-                timestamp, source_ip, source_port, destination_ip, dest_port, 
-                alert_message, severity, protocol, action_taken, raw_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                timestamp.isoformat(),
-                src_ip,
-                src_port,
-                dest_ip,
-                dest_port,
-                alert_message,
-                severity,
-                protocol,
-                action_taken,
-                json.dumps(alert_data)
+        try:
+            conn = sqlite3.connect(DB_PATH, timeout=10)
+            conn.execute('PRAGMA journal_mode=WAL;')
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO alerts (
+                    timestamp, source_ip, source_port, destination_ip, dest_port, 
+                    alert_message, severity, protocol, action_taken, raw_data
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    timestamp.isoformat(),
+                    src_ip,
+                    src_port,
+                    dest_ip,
+                    dest_port,
+                    alert_message,
+                    severity,
+                    protocol,
+                    action_taken,
+                    json.dumps(alert_data)
+                )
             )
-        )
-        conn.commit()
-        conn.close()
+            conn.commit()
+            logger.info(f"Alerta guardada en la base de datos: {cursor.lastrowid}")
+        except sqlite3.Error as e:
+            logger.error(f"Error al guardar en la base de datos: {e}")
+            # Intentar recrear la base de datos si hay un error de esquema
+            if "no such table" in str(e).lower():
+                logger.info("Recreando la base de datos...")
+                init_database()
+        except Exception as e:
+            logger.error(f"Error inesperado al guardar en la base de datos: {e}")
+        finally:
+            if 'conn' in locals():
+                conn.close()
         logger.info("Alerta procesada: %s | Src: %s | Dest: %s | Severidad: %d | Acción: %s",
                     alert_message, src_ip, dest_ip, severity, action_taken)
 
@@ -393,65 +498,106 @@ class SuricataEventHandler(FileSystemEventHandler):
         self.file_size = 0
         # Obtener la marca de tiempo de inicio
         self.start_time = datetime.now().timestamp()
+        self.eve_file = "/var/log/suricata/eve.json"
         logger.info("Iniciando monitoreo de eventos nuevos (desde %s)", 
                    datetime.fromtimestamp(self.start_time).isoformat())
+        
+        # Verificar si el archivo existe y es accesible
+        if not os.path.exists(self.eve_file):
+            logger.error(f"El archivo {self.eve_file} no existe")
+        elif not os.access(self.eve_file, os.R_OK):
+            logger.error(f"No se puede leer el archivo {self.eve_file}. Permiso denegado.")
+        else:
+            logger.info(f"Monitoreando archivo: {self.eve_file}")
+            # Inicializar la posición al final del archivo si existe
+            try:
+                with open(self.eve_file, 'r') as f:
+                    f.seek(0, 2)  # Ir al final del archivo
+                    self.last_position = f.tell()
+                    logger.info(f"Posición inicial del archivo: {self.last_position}")
+            except Exception as e:
+                logger.error(f"Error al inicializar la posición del archivo: {e}")
 
     def on_modified(self, event):
-        if event.is_directory:
-            return
-        if os.path.basename(event.src_path) != "eve.json":
+        if event.is_directory or os.path.basename(event.src_path) != "eve.json":
             return
 
         try:
-            with open(event.src_path, 'r') as f:
-                # Ir al final del archivo (nuevas líneas)
-                f.seek(0, 2)  # Ir al final del archivo
-                current_size = f.tell()
+            logger.info(f"Archivo modificado: {event.src_path}")
+            self.process_eve_file()
+        except Exception as e:
+            logger.error(f"Error en on_modified: {e}", exc_info=True)
+    
+    def process_eve_file(self):
+        """Procesa el archivo eve.json y extrae las alertas."""
+        try:
+            # Verificar si el archivo existe y es accesible
+            if not os.path.exists(self.eve_file):
+                logger.warning(f"El archivo {self.eve_file} no existe")
+                return
+                
+            if not os.access(self.eve_file, os.R_OK):
+                logger.error(f"No se puede leer el archivo {self.eve_file}. Permiso denegado.")
+                return
+                
+            with open(self.eve_file, 'r', errors='replace') as f:
+                # Obtener el tamaño actual del archivo
+                current_size = os.path.getsize(self.eve_file)
+                logger.debug(f"Tamaño actual del archivo: {current_size}, última posición: {self.last_position}")
                 
                 # Si el archivo se ha reducido (rotación de logs), reiniciar la posición
-                if current_size < self.file_size:
+                if current_size < self.last_position:
+                    logger.info(f"Archivo rotado detectado. Tamaño actual: {current_size}, última posición: {self.last_position}")
                     self.last_position = 0
+                
+                # Si no hay contenido nuevo, salir
+                if self.last_position >= current_size:
+                    return
+                
+                # Ir a la última posición leída y leer el contenido nuevo
+                f.seek(self.last_position)
+                new_content = f.read(current_size - self.last_position)
+                
+                # Actualizar la última posición
+                self.last_position = current_size
+                
+                # Procesar cada línea del contenido nuevo
+                for line in new_content.splitlines():
+                    self.process_line(line.strip())
+                
+                # Actualizar el tamaño del archivo después de procesar las líneas
                 self.file_size = current_size
                 
-                # Si es la primera vez, posicionarse al final del archivo actual
-                if self.last_position == 0 and current_size > 0:
-                    f.seek(0, 2)  # Ir al final
-                    self.last_position = f.tell()
-                    return
-                    
-                # Ir a la última posición leída
-                f.seek(self.last_position)
-                
-                # Procesar solo líneas nuevas
-                for line in f:
-                    try:
-                        alert_json = json.loads(line.strip())
-                        # Solo procesar si es una alerta y es posterior al inicio del servicio
-                        if 'alert' in alert_json:
-                            try:
-                                # Intentar con el formato con zona horaria con :
-                                alert_time = datetime.strptime(alert_json.get('timestamp', '1970-01-01T00:00:00+0000'), '%Y-%m-%dT%H:%M:%S%z')
-                            except ValueError:
-                                try:
-                                    # Intentar con el formato sin zona horaria
-                                    alert_time = datetime.strptime(alert_json.get('timestamp', '1970-01-01T00:00:00'), '%Y-%m-%dT%H:%M:%S.%f')
-                                except ValueError:
-                                    # Si no se puede analizar, usar la hora actual
-                                    alert_time = datetime.now()
-                            
-                            if alert_time.timestamp() >= self.start_time:
-                                process_alert(alert_json)
-                    except json.JSONDecodeError as e:
-                        logger.error("Error decodificando JSON: %s", e)
-                        continue
-                    except Exception as e:
-                        logger.error("Error procesando línea: %s", e, exc_info=True)
-                
-                # Actualizar la última posición leída
-                self.last_position = f.tell()
-                
         except Exception as e:
-            logger.error("Error leyendo %s: %s", event.src_path, e)
+            logger.error(f"Error procesando el archivo {self.eve_file}: {e}", exc_info=True)
+    
+    def process_line(self, line):
+        """Procesa una línea del archivo de registro."""
+        if not line:
+            return
+            
+        try:
+            alert_json = json.loads(line)
+            # Solo procesar si es una alerta y es posterior al inicio del servicio
+            if 'alert' in alert_json:
+                try:
+                    # Intentar con el formato con zona horaria con :
+                    alert_time = datetime.strptime(alert_json.get('timestamp', '1970-01-01T00:00:00+0000'), '%Y-%m-%dT%H:%M:%S%z')
+                except ValueError:
+                    try:
+                        # Intentar con el formato sin zona horaria
+                        alert_time = datetime.strptime(alert_json.get('timestamp', '1970-01-01T00:00:00'), '%Y-%m-%dT%H:%M:%S.%f')
+                    except ValueError:
+                        # Si no se puede analizar, usar la hora actual
+                        alert_time = datetime.now()
+                
+                if alert_time.timestamp() >= self.start_time:
+                    logger.info(f"Procesando nueva alerta: {alert_json.get('alert', {}).get('signature', 'Desconocida')}")
+                    process_alert(alert_json)
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decodificando JSON: {e}. Línea: {line}")
+        except Exception as e:
+            logger.error(f"Error procesando línea: {e}", exc_info=True)
 
 # ----------------------------------------
 # API REST con Flask para consultar alertas

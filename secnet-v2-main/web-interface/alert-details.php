@@ -170,8 +170,8 @@ if ($source_ip) {
         </header>
         <main>
             <h2><i class="fas fa-eye"></i> Detalles de la Alerta</h2>
-            <section class="alert-card">
-                <div class="alert-card-header severity-<?= (int)$alert['severity'] ?>">
+            <section class="alert-card severity-<?= (int)$alert['severity'] ?>">
+                <div class="alert-card-header">
                     <i class="fas fa-bolt"></i> Alerta #<?= htmlspecialchars($alert['id']) ?>
                 </div>
                 <div class="alert-card-body">
@@ -200,7 +200,7 @@ if ($source_ip) {
                     </div>
                     <div class="alert-detail-row"><span class="alert-detail-label">Protocolo:</span><span><?= htmlspecialchars($alert['protocol']) ?></span></div>
                     <div class="alert-detail-row"><span class="alert-detail-label">Mensaje:</span><span><?= htmlspecialchars($alert['alert_message']) ?></span></div>
-                    <div class="alert-detail-row"><span class="alert-detail-label">Severidad:</span><span class="severity-badge severity-<?= (int)$alert['severity'] ?>"><?= htmlspecialchars($alert['severity']) ?></span></div>
+                    <div class="alert-detail-row"><span class="alert-detail-label">Gravedad:</span><span class="gravedad-badge gravedad-<?= (int)$alert['severity'] ?>"><?= htmlspecialchars($alert['severity']) ?></span></div>
                     <div class="alert-actions">
                         <button id="showJsonBtn" class="action-btn primary">
                             <i class="fas fa-code"></i> Ver detalles completos
@@ -215,7 +215,7 @@ if ($source_ip) {
                         <tr>
                             <th>Fecha/Hora</th>
                             <th>Mensaje</th>
-                            <th>Severidad</th>
+                            <th>Gravedad</th>
                             <th>Destino</th>
                         </tr>
                     </thead>
@@ -228,7 +228,7 @@ if ($source_ip) {
     echo $date->format('d-m-Y H:i');
 ?></td>
                             <td><?= htmlspecialchars($h['alert_message']) ?></td>
-                            <td><span class="severity-badge severity-<?= (int)$h['severity'] ?>"><?= htmlspecialchars($h['severity']) ?></span></td>
+                            <td><span class="gravedad-badge gravedad-<?= (int)$h['severity'] ?>"><?= htmlspecialchars($h['severity']) ?></span></td>
                             <td><?= htmlspecialchars($h['destination_ip']) ?><?= !empty($h['dest_port']) ? ':' . htmlspecialchars($h['dest_port']) : '' ?></td>
                         </tr>
                     <?php endforeach; ?>

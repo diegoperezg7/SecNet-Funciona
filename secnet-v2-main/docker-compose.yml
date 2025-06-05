@@ -18,17 +18,24 @@ services:
   python-responder:
     build: ./python-responder
     container_name: python-responder
-    user: "1000:1000"  # Default non-root user ID
-    networks:
-      - incident-network
+    user: "root"  # Necesitamos ser root para modificar iptables
+    network_mode: "host"  # Necesario para modificar iptables del host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_ADMIN
     volumes:
-      - ./web-interface:/var/www/html
       - ./logs:/var/log/suricata:ro
+      - ./python-responder:/app
       - ./database:/app/database
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+    working_dir: /app
+    command: sh -c "mkdir -p /app/database && chmod 777 /app/database && python responder.py"
     depends_on:
       - suricata
     restart: unless-stopped
-    command: ["python", "responder.py"]
 
   web-interface:
     build: ./web-interface

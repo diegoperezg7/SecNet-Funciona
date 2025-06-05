@@ -154,17 +154,17 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-.alert-item.severity-high {
+.alert-item.gravedad-high {
     border-left-color: var(--accent-red);
     background: rgba(255, 0, 0, 0.05);
 }
 
-.alert-item.severity-medium {
+.alert-item.gravedad-medium {
     border-left-color: var(--accent-yellow);
     background: rgba(255, 204, 0, 0.05);
 }
 
-.alert-item.severity-low {
+.alert-item.gravedad-low {
     border-left-color: var(--accent-green);
     background: rgba(0, 255, 0, 0.05);
 }
@@ -176,7 +176,7 @@ body {
     background: rgba(0, 255, 0, 0.03);
 }
 
-.alert-item.is-internal .alert-severity {
+.alert-item.is-internal .alert-gravedad {
     opacity: 0.7;
     background: rgba(0, 255, 0, 0.1);
     color: var(--accent-green);
@@ -195,24 +195,24 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
-.alert-severity {
+.alert-gravedad {
     font-weight: bold;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.85rem;
 }
 
-.alert-severity.high {
+.alert-gravedad.high {
     background: rgba(255, 0, 0, 0.1);
     color: var(--accent-red);
 }
 
-.alert-severity.medium {
+.alert-gravedad.medium {
     background: rgba(255, 204, 0, 0.1);
     color: var(--accent-yellow);
 }
 
-.alert-severity.low {
+.alert-gravedad.low {
     background: rgba(0, 255, 0, 0.1);
     color: var(--accent-green);
 }
@@ -294,15 +294,15 @@ body {
     transition: transform 0.2s ease-in-out;
 }
 
-.dashboard-notification.severity-2 {
+.dashboard-notification.gravedad-2 {
     border-left-color: var(--danger-color);
 }
 
-.dashboard-notification.severity-1 {
+.dashboard-notification.gravedad-1 {
     border-left-color: var(--warning-color);
 }
 
-.dashboard-notification.severity-0 {
+.dashboard-notification.gravedad-0 {
     border-left-color: var(--info-color);
 }
 
@@ -321,7 +321,7 @@ body {
     flex: 1;
 }
 
-.notification-severity {
+.notification-gravedad {
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--accent-blue);
@@ -682,8 +682,8 @@ tr:hover {
     box-shadow: 0 4px 24px #ff4d6d55;
 }
 
-.severity.severity-3 {
-    color: #ff4444; /* Rojo para severidad 3 (Alta) */
+.gravedad.gravedad-3 {
+    color: #ff4444; /* Rojo para gravedad 3 (Alta) */
     font-weight: bold;
     background-color: rgba(255, 68, 68, 0.1);
     padding: 2px 8px;
@@ -693,8 +693,8 @@ tr:hover {
     text-align: center;
 }
 
-.severity.severity-2 {
-    color: #ffbb33; /* Amarillo para severidad 2 (Media) */
+.gravedad.gravedad-2 {
+    color: #ffbb33; /* Amarillo para gravedad 2 (Media) */
     font-weight: bold;
     background-color: rgba(255, 187, 51, 0.1);
     padding: 2px 8px;
@@ -704,8 +704,8 @@ tr:hover {
     text-align: center;
 }
 
-.severity.severity-1 {
-    color: #00C851; /* Verde para severidad 1 (Baja) */
+.gravedad.gravedad-1 {
+    color: #00C851; /* Verde para gravedad 1 (Baja) */
     font-weight: bold;
     background-color: rgba(0, 200, 81, 0.1);
     padding: 2px 8px;
@@ -716,17 +716,17 @@ tr:hover {
 }
 
 /* Mantener compatibilidad con las clases antiguas por si acaso */
-.severity.high {
+.gravedad.high {
     color: #ff4444;
     font-weight: bold;
 }
 
-.severity.medium {
+.gravedad.medium {
     color: #ffbb33;
     font-weight: bold;
 }
 
-.severity.low {
+.gravedad.low {
     color: #00C851;
     font-weight: bold;
 }
@@ -883,17 +883,17 @@ footer {
     background: #22304a;
 }
 
-.tech-table .severity.high {
+.tech-table .gravedad.high {
     color: var(--danger-color);
     font-weight: bold;
 }
 
-.tech-table .severity.medium {
+.tech-table .gravedad.medium {
     color: #ffd166;
     font-weight: 600;
 }
 
-.tech-table .severity.low {
+.tech-table .gravedad.low {
     color: #00ffae;
     font-weight: 600;
 }
@@ -1057,38 +1057,79 @@ footer {
     max-width: 540px;
     margin-left: auto;
     margin-right: auto;
+    border-left: 4px solid #2d3748; /* Color por defecto */
+}
+
+/* Estilos para cada nivel de gravedad */
+.alert-card.severity-1 {
+    border-left-color: #28a745;
+    background: linear-gradient(90deg, #1a2e22 0%, #23283b 100%);
+}
+
+.alert-card.severity-2 {
+    border-left-color: #ffc107;
+    background: linear-gradient(90deg, #2d2a1f 0%, #23283b 100%);
+}
+
+.alert-card.severity-3 {
+    border-left-color: #ff6b6b;
+    background: linear-gradient(90deg, #2d1e1e 0%, #23283b 100%);
 }
 .alert-card-header {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
     font-weight: 800;
-    background: linear-gradient(90deg, #151c2b 80%, #1976d2 100%);
-    color: #fff;
+    background: linear-gradient(90deg, #151c2b 0%, #1976d2 100%);
+    color: #fff !important; /* Forzar color blanco */
     padding: 1.1rem 2rem;
     border-bottom: 1.5px solid #1976d2;
     display: flex;
     align-items: center;
     gap: 0.6rem;
 }
-/* Severidad 3 - Alta - Rojo */
-.alert-card .alert-card-header.severity-3 {
+
+/* Asegurar que el texto de la cabecera sea blanco */
+.alert-card-header,
+.alert-card-header i,
+.alert-card-header * {
+    color: #fff !important;
+}
+
+/* Estilos para la cabecera según la gravedad */
+.alert-card.severity-1 .alert-card-header {
+    background: linear-gradient(90deg, #151c2b 0%, #28a745 100%);
+    border-bottom-color: #28a745;
+}
+
+.alert-card.severity-2 .alert-card-header {
+    background: linear-gradient(90deg, #151c2b 0%, #ffc107 100%);
+    border-bottom-color: #ffc107;
+    color: #23283b; /* Texto oscuro para mejor contraste */
+}
+
+.alert-card.severity-3 .alert-card-header {
+    background: linear-gradient(90deg, #151c2b 0%, #ff6b6b 100%);
+    border-bottom-color: #ff6b6b;
+}
+/* Gravedad 3 - Alta - Rojo */
+.alert-card .alert-card-header.gravedad-3 {
     background: linear-gradient(90deg, #151c2b 60%, #d50000 100%) !important;
     border-bottom: 1.5px solid #d50000 !important;
 }
-/* Severidad 2 - Media - Amarillo */
-.alert-card .alert-card-header.severity-2 {
+/* Gravedad 2 - Media - Amarillo */
+.alert-card .alert-card-header.gravedad-2 {
     background: linear-gradient(90deg, #151c2b 70%, #ffd600 100%) !important;
     border-bottom: 1.5px solid #ffd600 !important;
     color: #ffffff !important; /* Texto blanco para mejor contraste */
 }
 
-/* Asegurar que el ícono y el texto en el encabezado de severidad 2 sean blancos */
-.alert-card .alert-card-header.severity-2,
-.alert-card .alert-card-header.severity-2 i {
+/* Asegurar que el ícono y el texto en el encabezado de gravedad 2 sean blancos */
+.alert-card .alert-card-header.gravedad-2,
+.alert-card .alert-card-header.gravedad-2 i {
     color: #ffffff !important;
 }
-/* Severidad 1 - Baja - Verde */
-.alert-card .alert-card-header.severity-1 {
+/* Gravedad 1 - Baja - Verde */
+.alert-card .alert-card-header.gravedad-1 {
     background: linear-gradient(90deg, #151c2b 80%, #00c853 100%) !important;
     border-bottom: 1.5px solid #00c853 !important;
 }
@@ -1112,35 +1153,55 @@ footer {
     font-size: 1.04rem;
     min-width: 120px;
 }
-.severity-badge {
-    display: inline-block;
+.gravedad-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 2.2em;
-    text-align: center;
-    padding: 0.2em 0.7em;
-    border-radius: 1.2em;
-    font-weight: 700;
-    font-size: 1.05em;
-    margin-left: 0.7em;
-    box-shadow: 0 1px 6px #151c2b44;
-    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
-/* Severidad 3 - Alta - Rojo */
-.alert-detail-row .severity-badge.severity-3,
-.alert-history-table .severity-badge.severity-3 {
-    background: #d50000 !important;
-    color: #fff !important;
+
+/* Gravedad 3 - Alta - Rojo */
+.gravedad-3,
+.alert-detail-row .gravedad-badge.gravedad-3,
+.alert-history-table .gravedad-badge.gravedad-3,
+td .gravedad-badge.gravedad-3 {
+    background-color: #ff444433 !important;
+    color: #ff6b6b !important;
+    border-color: #ff6b6b !important;
 }
-/* Severidad 2 - Media - Amarillo */
-.alert-detail-row .severity-badge.severity-2,
-.alert-history-table .severity-badge.severity-2 {
-    background: #ffd600 !important;
-    color: #23283b !important;
+
+/* Gravedad 2 - Media - Amarillo/Naranja */
+.gravedad-2,
+.alert-detail-row .gravedad-badge.gravedad-2,
+.alert-history-table .gravedad-badge.gravedad-2,
+td .gravedad-badge.gravedad-2 {
+    background-color: #ffc10733 !important;
+    color: #ffc107 !important;
+    border-color: #ffc107 !important;
 }
-/* Severidad 1 - Baja - Verde */
-.alert-detail-row .severity-badge.severity-1,
-.alert-history-table .severity-badge.severity-1 {
-    background: #00c853 !important;
-    color: #fff !important;
+
+/* Gravedad 1 - Baja - Verde */
+.gravedad-1,
+.alert-detail-row .gravedad-badge.gravedad-1,
+.alert-history-table .gravedad-badge.gravedad-1,
+td .gravedad-badge.gravedad-1 {
+    background-color: #28a74533 !important;
+    color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+/* Efecto hover sutil */
+.gravedad-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 .alert-history-box {
     margin: 2.5rem auto 2rem auto;

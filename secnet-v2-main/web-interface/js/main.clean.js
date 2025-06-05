@@ -60,16 +60,16 @@ function initCharts() {
         });
     }
     
-    // Verificar si hay datos de severidad para mostrar
+    // Verificar si hay datos de gravedad para mostrar
     if (!window.severityData || !window.severityData.labels || window.severityData.labels.length === 0) {
-        console.warn('No hay datos de severidad para mostrar');
+        console.warn('No hay datos de gravedad para mostrar');
         // Mostrar un mensaje en el contenedor del gráfico
         if (severityCtx && severityCtx.parentNode) {
-            severityCtx.parentNode.innerHTML += '<p class="no-data">No hay datos de severidad disponibles</p>';
+            severityCtx.parentNode.innerHTML += '<p class="no-data">No hay datos de gravedad disponibles</p>';
         }
     } else {
-        console.log('Creando gráfico de severidad con datos:', window.severityData);
-        // Mapa de colores y etiquetas para la severidad
+        console.log('Creando gráfico de gravedad con datos:', window.severityData);
+        // Mapa de colores y etiquetas para la gravedad
         const severityConfig = {
             '1': { 
                 color: '#00ffae',
@@ -89,7 +89,7 @@ function initCharts() {
             }
         };
         
-        // Gráfico de distribución de severidad
+        // Gráfico de distribución de gravedad
         new Chart(severityCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
@@ -97,7 +97,7 @@ function initCharts() {
                 datasets: [{
                     data: window.severityData.data,
                     backgroundColor: window.severityData.labels.map((label, index) => {
-                        // Usar el índice + 1 como severidad (1, 2, 3)
+                        // Usar el índice + 1 como gravedad (1, 2, 3)
                         const severity = (index + 1).toString();
                         return severityConfig[severity]?.color || '#ffd600'; // Amarillo por defecto
                     }),
@@ -123,7 +123,7 @@ function initCharts() {
                         },
                         title: {
                             display: true,
-                            text: 'Niveles de Severidad',
+                            text: 'Niveles de Gravedad',
                             color: '#e0e6ed',
                             padding: { top: 10, bottom: 5 },
                             font: {
@@ -134,7 +134,7 @@ function initCharts() {
                     },
                     title: { 
                         display: true, 
-                        text: 'Distribución de Severidad', 
+                        text: 'Distribución de Gravedad', 
                         font: { size: 16 },
                         padding: { bottom: 15 },
                         color: '#e0e6ed' // Color del título para mejor contraste

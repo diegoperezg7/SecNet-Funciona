@@ -86,13 +86,13 @@ try {
                 continue;
             }
             
-            // Marcar como crítica y forzar severidad baja para tráfico interno crítico
+            // Marcar como crítica y forzar gravedad baja para tráfico interno crítico
             $alert['severity'] = 1;
             $alert['is_internal'] = true;
             $alert['is_critical'] = true;
         }
         
-        // Ignorar alertas con poca severidad de IPs conocidas
+        // Ignorar alertas con poca gravedad de IPs conocidas
         $knownIps = [
             '8.8.8.8',   // Google DNS
             '8.8.4.4',   // Google DNS

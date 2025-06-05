@@ -49,9 +49,9 @@ const MAX_RETRY_ATTEMPTS = 10;
 const INITIAL_POLL_INTERVAL = 1000; // Reducir a 1 segundo para actualizaciones más frecuentes
 let MIN_ALERT_TIMESTAMP = null; // Sin límite de tiempo por defecto
 const ALERT_THRESHOLD = {
-    HIGH: 5,     // Número de alertas por minuto para considerar alta severidad
-    MEDIUM: 20,  // Número de alertas por minuto para considerar media severidad
-    LOW: 50      // Número de alertas por minuto para considerar baja severidad
+    HIGH: 5,     // Número de alertas por minuto para considerar alta gravedad
+    MEDIUM: 20,  // Número de alertas por minuto para considerar media gravedad
+    LOW: 50      // Número de alertas por minuto para considerar baja gravedad
 };
 const RETRY_DELAY = 2000; // 2 segundos entre intentos
 
@@ -87,12 +87,12 @@ function isInternalIP(ip) {
     return false;
 }
 
-// Función para determinar la severidad de una alerta
+// Función para determinar la gravedad de una alerta
 function determineAlertSeverity(alert) {
-    // Obtener la severidad directamente del servidor
+    // Obtener la gravedad directamente del servidor
     const severity = parseInt(alert.severity);
     
-    // Mapear la severidad numérica a texto
+    // Mapear la gravedad numérica a texto
     switch(severity) {
         case 3:
             return 'HIGH';
@@ -124,10 +124,10 @@ function isRelevantAlert(alert) {
             return false;
         }
         
-        // Marcar como crítica pero mantener la severidad original
+        // Marcar como crítica pero mantener la gravedad original
         alert.is_critical = true;
-        // No sobrescribir la severidad: mantener la que viene del servidor
-        // alert.severity = 1; // Eliminado para mantener la severidad original
+        // No sobrescribir la gravedad: mantener la que viene del servidor
+        // alert.severity = 1; // Eliminado para mantener la gravedad original
     }
     
     // Ignorar alertas muy antiguas
@@ -433,7 +433,7 @@ function updateAlertUI(alert) {
         <td>${alert.destination_ip || ''}</td>
         <td>${alert.alert_message}</td>
         <td>${alert.protocol || 'unknown'}</td>
-        <td class="severity ${severity.toLowerCase()}">${severity}</td>
+        <td><span class="gravedad-badge gravedad-${severity}">${severity}</span></td>
         <td>${alert.action_taken || 'none'}</td>
         <td>
             <button class="action-btn alerta details-button" onclick="viewAlertDetails(${alert.id})">

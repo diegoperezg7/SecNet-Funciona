@@ -32,11 +32,12 @@
                 <div class="filters" id="filtersPanel" style="display:none;">
                     <form method="get" action="alerts.php">
                         <div class="filter-group">
-                            <label for="severity">Severidad:</label>
+                            <label for="severity">Gravedad:</label>
                             <select name="severity" id="severity">
                                 <option value="">Todas</option>
                                 <option value="1" <?php echo isset($_GET['severity']) && $_GET['severity'] == '1' ? 'selected' : ''; ?>>Baja (1)</option>
-                                <option value="2" <?php echo isset($_GET['severity']) && $_GET['severity'] == '2' ? 'selected' : ''; ?>>Alta (2+)</option>
+                                <option value="2" <?php echo isset($_GET['severity']) && $_GET['severity'] == '2' ? 'selected' : ''; ?>>Media (2)</option>
+                                <option value="3" <?php echo isset($_GET['severity']) && $_GET['severity'] == '3' ? 'selected' : ''; ?>>Alta (3+)</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -67,7 +68,7 @@
                                 <th>IP Destino</th>
                                 <th>Alerta</th>
                                 <th>Protocolo</th>
-                                <th>Severidad</th>
+                                <th>Gravedad</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -86,12 +87,14 @@
                             $params = [];
                             
                             if (isset($_GET['severity']) && $_GET['severity'] !== '') {
-                                if ($_GET['severity'] == '1') {
-                                    $query .= " AND severity = 1";
-                                    $countQuery .= " AND severity = 1";
+                                $severity = intval($_GET['severity']);
+                                if ($severity === 3) {
+                                    $query .= " AND severity >= 3";
+                                    $countQuery .= " AND severity >= 3";
                                 } else {
-                                    $query .= " AND severity >= 2";
-                                    $countQuery .= " AND severity >= 2";
+                                    $query .= " AND severity = :severity";
+                                    $countQuery .= " AND severity = :severity";
+                                    $params[':severity'] = $severity;
                                 }
                             }
                             if (isset($_GET['ip']) && $_GET['ip'] !== '') {
@@ -132,14 +135,8 @@
                             
                             while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
                                 $alertCount++;
-                                // Asignar clases de severidad según la escala:
-                                // 3: Alta, 2: Media, 1: Baja
-                                $severity_class = 'low';
-                                if ($row['severity'] == 2) {
-                                    $severity_class = 'medium';
-                                } elseif ($row['severity'] >= 3) {
-                                    $severity_class = 'high';
-                                }
+                                // Clases de gravedad ahora se manejan con gravedad-badge
+
                                 echo '<tr>';
                                 echo '<td>' . $row['id'] . '</td>';
                                 // Convertir la fecha/hora a la zona horaria de Madrid
@@ -150,7 +147,7 @@
                                 echo '<td>' . htmlspecialchars($row['destination_ip']) . '</td>';
                                 echo '<td>' . htmlspecialchars($row['alert_message']) . '</td>';
                                 echo '<td>' . htmlspecialchars($row['protocol']) . '</td>';
-                                echo '<td class="severity ' . $severity_class . '">' . $row['severity'] . '</td>';
+                                echo '<td><span class="gravedad-badge gravedad-' . (int)$row['severity'] . '">' . $row['severity'] . '</span></td>';
                                 echo '<td>';
                                 echo '<button class="action-btn alerta details-button" onclick="viewAlertDetails(' . $row['id'] . ')"><i class="fas fa-eye"></i></button> ';
                                 echo '<button class="action-btn alerta block-button" onclick="blockIP(\'' . htmlspecialchars($row['source_ip']) . '\')"><i class="fas fa-ban"></i></button>';

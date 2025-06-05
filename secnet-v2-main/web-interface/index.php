@@ -118,7 +118,7 @@
                     <div class="stat-card">
                         <div class="stat-icon danger"><i class="fas fa-bolt"></i></div>
                         <div class="stat-content">
-                            <div class="stat-title">Alta Severidad</div>
+                            <div class="stat-title">Alta Gravedad</div>
                             <div class="stat-value"><?php echo $high_severity; ?></div>
                         </div>
                     </div>
@@ -151,7 +151,7 @@ function prepareChartDatasets() {
         $alert_types[$row['alert_message']] = $row['count'];
     }
     
-    // Obtener distribución de severidad
+    // Obtener distribución de gravedad
     $severity_dist = [];
     $severity_query = "SELECT severity, COUNT(*) as count FROM alerts GROUP BY severity ORDER BY severity";
     $severity_result = $db->query($severity_query);
@@ -184,7 +184,7 @@ $chartData = prepareChartDatasets();
                         </div>
                     </div>
                     <div class="chart-card">
-                        <h3><i class="fas fa-chart-bar"></i> Distribución de severidad</h3>
+                        <h3><i class="fas fa-chart-bar"></i> Distribución de gravedad</h3>
                         <div class="chart-container" style="min-height: 300px;">
                             <canvas id="severityChart" style="width: 100%; height: 100%;"></canvas>
                         </div>
@@ -200,7 +200,7 @@ $chartData = prepareChartDatasets();
                                 <tr>
                                     <th>IP origen</th>
                                     <th>Alertas</th>
-                                    <th>Severidad máx.</th>
+                                    <th>Gravedad máx.</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
@@ -240,10 +240,8 @@ $chartData = prepareChartDatasets();
                                     <th>Hora</th>
                                     <th>IP origen</th>
                                     <th>Alertas</th>
-                                    <th>Severidad máx.</th>
-                                    <th>Estado</th>
+                                    <th>Gravedad máx.</th>
                                     <th>Acción</th>
-                                    <th>Detalles</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -252,13 +250,12 @@ $chartData = prepareChartDatasets();
                                 $results = $db->query("SELECT * FROM alerts WHERE $where_not_blocked AND $timeFilter ORDER BY timestamp DESC LIMIT 5");
                                 
                                 while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-                                    $severity_class = 'severity-' . $row['severity']; // Usar el número de severidad como clase
+                                    // Las clases de gravedad ahora usan gravedad-badge
                                     echo '<tr>';
                                     echo '<td>' . date('d-m-Y H:i', strtotime($row['timestamp'])) . '</td>';
                                     echo '<td>' . htmlspecialchars($row['source_ip']) . '</td>';
                                     echo '<td>' . htmlspecialchars($row['alert_message']) . '</td>';
-                                    echo '<td><span class="severity ' . $severity_class . '">' . htmlspecialchars($row['severity']) . '</span></td>';
-                                    echo '<td>' . htmlspecialchars($row['action_taken']) . '</td>';
+                                    echo '<td><span class="gravedad-badge gravedad-' . (int)$row['severity'] . '">' . htmlspecialchars($row['severity']) . '</span></td>';
                                     echo '<td><a href="alert-details.php?id=' . urlencode($row['id']) . '" class="btn btn-icon" title="Ver detalles"><i class="fas fa-eye"></i></a></td>';
                                     echo '</tr>';
                                 }
@@ -289,22 +286,22 @@ $chartData = prepareChartDatasets();
         data: <?php echo json_encode(array_values($alerts_by_hour)); ?>
     };
     
-    // Preparar etiquetas de severidad
+    // Preparar etiquetas de gravedad
     window.severityLabels = <?php 
         $severityNames = ['Baja (1)', 'Media (2)', 'Alta (3)'];
         $formattedLabels = [];
-        // Asegurarse de que tengamos entradas para las severidades 1, 2 y 3
+        // Asegurarse de que tengamos entradas para las gravedades 1, 2 y 3
         for ($i = 1; $i <= 3; $i++) {
-            $formattedLabels[] = $severityNames[$i-1] ?? "Severidad $i";
+            $formattedLabels[] = $severityNames[$i-1] ?? "Gravedad $i";
         }
         echo json_encode($formattedLabels);
     ?>;
     
-    // Asegurarse de que los datos de severidad tengan 3 valores (para 1, 2, 3)
+    // Asegurarse de que los datos de gravedad tengan 3 valores (para 1, 2, 3)
     window.severityData = {
         labels: window.severityLabels,
         data: <?php 
-            $severityValues = [0, 0, 0]; // Inicializar con ceros para severidad 1, 2, 3
+            $severityValues = [0, 0, 0]; // Inicializar con ceros para gravedad 1, 2, 3
             foreach ($severity_dist as $severity => $count) {
                 $sevNum = intval($severity) - 1; // Convertir a índice 0-2
                 if ($sevNum >= 0 && $sevNum <= 2) {

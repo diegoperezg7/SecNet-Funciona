@@ -5,7 +5,7 @@ SecNet es un sistema integral de seguridad de red que proporciona detección, an
 
 ## Características Principales
 - Detección de alertas en tiempo real en la interfaz eth0
-- Clasificación de alertas en tres niveles de severidad (1: baja, 2: media, 3: alta)
+- Clasificación de alertas en tres niveles de gravedad (1: baja, 2: media, 3: alta)
 - Interfaz web para visualización y gestión de alertas
 - Sistema de respuesta automatizada con bloqueo de IPs maliciosas
 - Análisis forense de incidentes
