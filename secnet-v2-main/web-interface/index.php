@@ -266,18 +266,28 @@ $chartData = prepareChartDatasets();
     
     // Preparar etiquetas de severidad
     window.severityLabels = <?php 
-        $severityNames = ['Baja', 'Media', 'Alta'];
+        $severityNames = ['Baja (1)', 'Media (2)', 'Alta (3)'];
         $formattedLabels = [];
-        foreach ($severity_dist as $key => $value) {
-            $sevNum = intval($key);
-            $formattedLabels[] = 'Severidad ' . ($severityNames[$sevNum] ?? $key);
+        // Asegurarse de que tengamos entradas para las severidades 1, 2 y 3
+        for ($i = 1; $i <= 3; $i++) {
+            $formattedLabels[] = $severityNames[$i-1] ?? "Severidad $i";
         }
         echo json_encode($formattedLabels);
     ?>;
     
+    // Asegurarse de que los datos de severidad tengan 3 valores (para 1, 2, 3)
     window.severityData = {
         labels: window.severityLabels,
-        data: <?php echo json_encode(array_values($severity_dist)); ?>
+        data: <?php 
+            $severityValues = [0, 0, 0]; // Inicializar con ceros para severidad 1, 2, 3
+            foreach ($severity_dist as $severity => $count) {
+                $sevNum = intval($severity) - 1; // Convertir a índice 0-2
+                if ($sevNum >= 0 && $sevNum <= 2) {
+                    $severityValues[$sevNum] = $count;
+                }
+            }
+            echo json_encode($severityValues);
+        ?>
     };
     
     // Debug: mostrar datos en consola

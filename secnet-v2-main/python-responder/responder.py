@@ -35,11 +35,31 @@ def init_database():
     """Inicializa la base de datos SQLite si no existe."""
     db_dir = os.path.dirname(DB_PATH)
     if not os.path.exists(db_dir):
-        os.makedirs(db_dir)
+        try:
+            os.makedirs(db_dir, mode=0o777, exist_ok=True)
+        except PermissionError as e:
+            print(f"Warning: Could not create directory {db_dir}: {e}")
     
+    # Try to set permissions on directory if it exists
+    if os.path.exists(db_dir):
+        try:
+            os.chmod(db_dir, 0o777)
+        except PermissionError as e:
+            print(f"Warning: Could not set permissions on directory {db_dir}: {e}")
+    
+    # Connect to the database
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.execute('PRAGMA journal_mode=WAL;')
     cursor = conn.cursor()
+    
+    # Try to set permissions on the database file
+    if os.path.exists(DB_PATH):
+        try:
+            os.chmod(DB_PATH, 0o666)
+        except (PermissionError, OSError) as e:
+            print(f"Warning: Could not set permissions on {DB_PATH}: {e}")
+            print("Continuing with current permissions...")
+            # Continue anyway, as the database might still be usable
     
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS alerts (

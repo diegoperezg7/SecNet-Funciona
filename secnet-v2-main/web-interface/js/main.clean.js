@@ -93,18 +93,12 @@ function initCharts() {
         new Chart(severityCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: window.severityData.labels.map((_, index) => {
-                    const severity = Math.min(parseInt(window.severityData.labels[index].match(/\d+/)?.[0] || '1'), 4).toString();
-                    return severityConfig[severity]?.label || `Severidad ${severity}`;
-                }),
+                labels: window.severityData.labels,
                 datasets: [{
                     data: window.severityData.data,
-                    backgroundColor: window.severityData.labels.map(label => {
-                        // Extraer el número de severidad de la etiqueta (ej: 'Severidad 1' -> 1)
-                        const severityMatch = label.match(/\d+/);
-                        let severity = severityMatch ? Math.min(parseInt(severityMatch[0]), 4).toString() : '1';
-                        // Si la severidad es 0, la convertimos a 1 (baja)
-                        if (severity === '0') severity = '1';
+                    backgroundColor: window.severityData.labels.map((label, index) => {
+                        // Usar el índice + 1 como severidad (1, 2, 3)
+                        const severity = (index + 1).toString();
                         return severityConfig[severity]?.color || '#ffd600'; // Amarillo por defecto
                     }),
                     borderWidth: 1

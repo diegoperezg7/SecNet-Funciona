@@ -15,16 +15,16 @@ services:
       - /etc/localtime:/etc/localtime:ro
     command: ["/usr/bin/suricata", "-c", "/etc/suricata/suricata.yaml", "-i", "eth0"]
     restart: unless-stopped
-
   python-responder:
     build: ./python-responder
     container_name: python-responder
+    user: "1000:1000"  # Default non-root user ID
     networks:
       - incident-network
     volumes:
-      - ./web-interface:/var/www/html           # código PHP de la web
+      - ./web-interface:/var/www/html
       - ./logs:/var/log/suricata:ro
-      - ./database:/app/database    # (tal como lo llevabas)
+      - ./database:/app/database
     depends_on:
       - suricata
     restart: unless-stopped

@@ -14,11 +14,20 @@ RUN apt-get update && \
     apt-get install -y suricata && \
     rm -rf /var/lib/apt/lists/*
 
+# Crear usuario y grupo suricata
+RUN groupadd -r suricata && \
+    useradd -r -g suricata -d /var/log/suricata -s /sbin/nologin suricata
+
 # Crear directorios para reglas y logs
-RUN mkdir -p /etc/suricata/rules /var/log/suricata
+RUN mkdir -p /etc/suricata/rules /var/log/suricata && \
+    chown -R suricata:suricata /var/log/suricata && \
+    chmod 770 /var/log/suricata
 
 # Copiar configuración y reglas locales
 COPY suricata.yaml /etc/suricata/suricata.yaml
+
+# Cambiar propietario de los archivos de configuración
+RUN chown -R suricata:suricata /etc/suricata
 COPY rules/local.rules /etc/suricata/rules/local.rules
 
 # Ajustar permisos

@@ -18,6 +18,20 @@ RUN apt-get update && apt-get install -y \
 # Instala las dependencias de Python especificadas en el archivo requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Crea el directorio de la base de datos con los permisos adecuados
+RUN mkdir -p /app/database && \
+    chmod -R 777 /app/database && \
+    touch /app/database/alerts.db && \
+    chmod 666 /app/database/alerts.db
+
+# Asegura que el usuario no root pueda escribir en el directorio
+RUN chown -R 1000:1000 /app/database
+RUN useradd -m appuser && \
+    chown -R appuser:appuser /app
+
+# Cambia al usuario no root
+USER appuser
+
 # Copia el archivo python-responder
 COPY responder.py .
 
