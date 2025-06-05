@@ -23,7 +23,7 @@ def create_test_alert():
             "rev": 1,
             "signature": "Test Alert",
             "category": "Test Alert Category",
-            "severity": 2
+            "severity": 1
         },
         "direction": "to_server",
         "flow": {
@@ -43,7 +43,7 @@ def create_test_alert():
 
 def append_alert_to_eve(alert):
     # Ruta al archivo eve.json
-    eve_file = "logs/eve.json"  # Ruta relativa al directorio del proyecto
+    eve_file = "./logs/eve.json"  # Ruta relativa al directorio del proyecto
     
     # Si el archivo no existe, crearlo vacío
     if not os.path.exists(eve_file):

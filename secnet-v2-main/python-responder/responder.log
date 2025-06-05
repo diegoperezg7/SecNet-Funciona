@@ -1,0 +1,17 @@
+nohup: no se tendrá en cuenta la entrada
+2025-06-05 13:32:41,583 - responder - INFO - Base de datos inicializada en /home/secnet/Descargas/secnet-v2-main/database/alerts.db
+2025-06-05 13:32:41,591 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-05 13:32:41,613 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+ * Serving Flask app 'responder'
+ * Debug mode: off
+2025-06-05 13:32:41,671 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-05 13:32:41,671 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-05 15:35:07,568 - werkzeug - INFO - 127.0.0.1 - - [05/Jun/2025 15:35:07] "[31m[1mPOST /api/block-ip HTTP/1.1[0m" 400 -
+(0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-05 13:32:41,671 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-05 15:35:07,568 - werkzeug - INFO - 127.0.0.1 - - [05/Jun/2025 15:35:07] "[31m[1mPOST /api/block-ip HTTP/1.1[0m" 400 -

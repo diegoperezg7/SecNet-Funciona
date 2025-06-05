@@ -42,6 +42,41 @@ body {
     padding: 0 20px;
 }
 
+/* Estilos para los badges de estado */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #2d3748;
+    color: #a0aec0;
+}
+
+.status-badge.blocked {
+    background-color: #ff444433;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+}
+
+.status-badge i {
+    margin-right: 4px;
+}
+
+.port-badge {
+    display: inline-block;
+    background-color: #3a506b;
+    color: #90e0ef;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    margin-left: 4px;
+    font-weight: bold;
+}
+
 /* Estilos para el footer */
 .footer-container {
     padding: 1rem;
@@ -647,18 +682,52 @@ tr:hover {
     box-shadow: 0 4px 24px #ff4d6d55;
 }
 
+.severity.severity-3 {
+    color: #ff4444; /* Rojo para severidad 3 (Alta) */
+    font-weight: bold;
+    background-color: rgba(255, 68, 68, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+}
+
+.severity.severity-2 {
+    color: #ffbb33; /* Amarillo para severidad 2 (Media) */
+    font-weight: bold;
+    background-color: rgba(255, 187, 51, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+}
+
+.severity.severity-1 {
+    color: #00C851; /* Verde para severidad 1 (Baja) */
+    font-weight: bold;
+    background-color: rgba(0, 200, 81, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Mantener compatibilidad con las clases antiguas por si acaso */
 .severity.high {
-    color: var(--danger-color);
+    color: #ff4444;
     font-weight: bold;
 }
 
 .severity.medium {
-    color: var(--warning-color);
+    color: #ffbb33;
     font-weight: bold;
 }
 
 .severity.low {
-    color: var(--success-color);
+    color: #00C851;
     font-weight: bold;
 }
 

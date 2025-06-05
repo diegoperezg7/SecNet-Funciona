@@ -67,7 +67,6 @@
                                 <th>Alerta</th>
                                 <th>Protocolo</th>
                                 <th>Severidad</th>
-                                <th>Acción</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -151,7 +150,6 @@
                                 echo '<td>' . htmlspecialchars($row['alert_message']) . '</td>';
                                 echo '<td>' . htmlspecialchars($row['protocol']) . '</td>';
                                 echo '<td class="severity ' . $severity_class . '">' . $row['severity'] . '</td>';
-                                echo '<td>' . htmlspecialchars($row['action_taken']) . '</td>';
                                 echo '<td>';
                                 echo '<button class="action-btn alerta details-button" onclick="viewAlertDetails(' . $row['id'] . ')"><i class="fas fa-eye"></i></button> ';
                                 echo '<button class="action-btn alerta block-button" onclick="blockIP(\'' . htmlspecialchars($row['source_ip']) . '\')"><i class="fas fa-ban"></i></button>';

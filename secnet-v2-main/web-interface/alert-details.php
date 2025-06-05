@@ -179,9 +179,24 @@ if ($source_ip) {
     $date->setTimezone(new DateTimeZone('Europe/Madrid'));
     echo $date->format('d-m-Y H:i');
 ?></span></div>
-                    <div class="alert-detail-row"><span class="alert-detail-label">IP Origen:</span><span><?= htmlspecialchars($alert['source_ip']) ?></span></div>
-                    <div class="alert-detail-row"><span class="alert-detail-label">IP Destino:</span><span><?= htmlspecialchars($alert['destination_ip']) ?></span></div>
-                    <div class="alert-detail-row"><span class="alert-detail-label">Puerto:</span><span><?= !empty($alert['dest_port']) ? htmlspecialchars($alert['dest_port']) : 'N/A' ?></span></div>
+                    <div class="alert-detail-row">
+                        <span class="alert-detail-label">IP Origen:</span>
+                        <span>
+                            <?= htmlspecialchars($alert['source_ip']) ?>
+                            <?php if (!empty($alert['source_port'])): ?>
+                                <span class="port-badge">:<?= htmlspecialchars($alert['source_port']) ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="alert-detail-row">
+                        <span class="alert-detail-label">IP Destino:</span>
+                        <span>
+                            <?= htmlspecialchars($alert['destination_ip']) ?>
+                            <?php if (!empty($alert['dest_port'])): ?>
+                                <span class="port-badge">:<?= htmlspecialchars($alert['dest_port']) ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
                     <div class="alert-detail-row"><span class="alert-detail-label">Protocolo:</span><span><?= htmlspecialchars($alert['protocol']) ?></span></div>
                     <div class="alert-detail-row"><span class="alert-detail-label">Mensaje:</span><span><?= htmlspecialchars($alert['alert_message']) ?></span></div>
                     <div class="alert-detail-row"><span class="alert-detail-label">Severidad:</span><span class="severity-badge severity-<?= (int)$alert['severity'] ?>"><?= htmlspecialchars($alert['severity']) ?></span></div>

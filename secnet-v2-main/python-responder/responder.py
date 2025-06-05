@@ -66,7 +66,9 @@ def init_database():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT,
         source_ip TEXT,
+        source_port TEXT,
         destination_ip TEXT,
+        dest_port TEXT,
         alert_message TEXT,
         severity INTEGER,
         protocol TEXT,
@@ -267,10 +269,40 @@ def classify_alert(alert_data):
     else:  # Baja severidad (1)
         return 'Actividad normal', severity
 
+def parse_suricata_timestamp(timestamp_str):
+    """Parsea el formato de timestamp de Suricata a un objeto datetime."""
+    try:
+        # Intenta analizar el timestamp directamente
+        return datetime.fromisoformat(timestamp_str)
+    except ValueError:
+        try:
+            # Si falla, intenta manejar el formato sin los dos puntos en el offset
+            if timestamp_str[-3] == ':' or timestamp_str[-5] == ':':
+                # Ya tiene los dos puntos, debería funcionar
+                return datetime.fromisoformat(timestamp_str)
+            # Añade los dos puntos en el offset de la zona horaria (ej: +0200 -> +02:00)
+            if '+' in timestamp_str and timestamp_str.count('+') == 1:
+                plus_pos = timestamp_str.rfind('+')
+                timestamp_str = f"{timestamp_str[:plus_pos+3]}:{timestamp_str[plus_pos+3:]}"
+            elif '-' in timestamp_str and timestamp_str.count('-') == 3:  # Para zonas horarias negativas
+                minus_pos = timestamp_str.rfind('-')
+                if len(timestamp_str) > minus_pos + 2:  # Asegurarse de que hay dígitos después del signo
+                    timestamp_str = f"{timestamp_str[:minus_pos+3]}:{timestamp_str[minus_pos+3:]}"
+            return datetime.fromisoformat(timestamp_str)
+        except Exception as e:
+            logger.error(f"Error al analizar timestamp {timestamp_str}: {e}")
+            return datetime.now()
+
 def process_alert(alert_data):
     """Procesa una alerta de Suricata y toma las acciones necesarias."""
     try:
-        timestamp = alert_data.get('timestamp', datetime.now().isoformat())
+        # Obtener y formatear el timestamp
+        timestamp_str = alert_data.get('timestamp')
+        if timestamp_str:
+            timestamp = parse_suricata_timestamp(timestamp_str)
+        else:
+            timestamp = datetime.now()
+        
         src_ip = alert_data.get('src_ip', 'unknown')
         dest_ip = alert_data.get('dest_ip', 'unknown')
         
@@ -315,19 +347,27 @@ def process_alert(alert_data):
                 if block_ip(src_ip, f"{alert_message} [{categoria}]"):
                     action_taken = f"Blocked source IP: {src_ip}"
         
+        # Obtener puertos
+        src_port = alert_data.get('src_port', '')
+        dest_port = alert_data.get('dest_port', '')
+        
         # Insertar en la tabla alerts
         conn = sqlite3.connect(DB_PATH, timeout=10)
         conn.execute('PRAGMA journal_mode=WAL;')
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO alerts (timestamp, source_ip, destination_ip, alert_message, severity, protocol, action_taken, raw_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO alerts (
+                timestamp, source_ip, source_port, destination_ip, dest_port, 
+                alert_message, severity, protocol, action_taken, raw_data
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                alert_data.get('timestamp', datetime.now().isoformat()),
+                timestamp.isoformat(),
                 src_ip,
+                src_port,
                 dest_ip,
+                dest_port,
                 alert_message,
                 severity,
                 protocol,
@@ -347,6 +387,15 @@ def process_alert(alert_data):
 # Watchdog Event Handler para eve.json
 # ----------------------------------------
 class SuricataEventHandler(FileSystemEventHandler):
+    def __init__(self):
+        super().__init__()
+        self.last_position = 0  # Guarda la última posición leída
+        self.file_size = 0
+        # Obtener la marca de tiempo de inicio
+        self.start_time = datetime.now().timestamp()
+        logger.info("Iniciando monitoreo de eventos nuevos (desde %s)", 
+                   datetime.fromtimestamp(self.start_time).isoformat())
+
     def on_modified(self, event):
         if event.is_directory:
             return
@@ -355,13 +404,52 @@ class SuricataEventHandler(FileSystemEventHandler):
 
         try:
             with open(event.src_path, 'r') as f:
+                # Ir al final del archivo (nuevas líneas)
+                f.seek(0, 2)  # Ir al final del archivo
+                current_size = f.tell()
+                
+                # Si el archivo se ha reducido (rotación de logs), reiniciar la posición
+                if current_size < self.file_size:
+                    self.last_position = 0
+                self.file_size = current_size
+                
+                # Si es la primera vez, posicionarse al final del archivo actual
+                if self.last_position == 0 and current_size > 0:
+                    f.seek(0, 2)  # Ir al final
+                    self.last_position = f.tell()
+                    return
+                    
+                # Ir a la última posición leída
+                f.seek(self.last_position)
+                
+                # Procesar solo líneas nuevas
                 for line in f:
                     try:
                         alert_json = json.loads(line.strip())
+                        # Solo procesar si es una alerta y es posterior al inicio del servicio
                         if 'alert' in alert_json:
-                            process_alert(alert_json)
-                    except json.JSONDecodeError:
+                            try:
+                                # Intentar con el formato con zona horaria con :
+                                alert_time = datetime.strptime(alert_json.get('timestamp', '1970-01-01T00:00:00+0000'), '%Y-%m-%dT%H:%M:%S%z')
+                            except ValueError:
+                                try:
+                                    # Intentar con el formato sin zona horaria
+                                    alert_time = datetime.strptime(alert_json.get('timestamp', '1970-01-01T00:00:00'), '%Y-%m-%dT%H:%M:%S.%f')
+                                except ValueError:
+                                    # Si no se puede analizar, usar la hora actual
+                                    alert_time = datetime.now()
+                            
+                            if alert_time.timestamp() >= self.start_time:
+                                process_alert(alert_json)
+                    except json.JSONDecodeError as e:
+                        logger.error("Error decodificando JSON: %s", e)
                         continue
+                    except Exception as e:
+                        logger.error("Error procesando línea: %s", e, exc_info=True)
+                
+                # Actualizar la última posición leída
+                self.last_position = f.tell()
+                
         except Exception as e:
             logger.error("Error leyendo %s: %s", event.src_path, e)
 

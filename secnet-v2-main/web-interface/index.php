@@ -89,14 +89,21 @@
                         $severity_dist[$row['severity']] = $row['count'];
                     }
 
-                    // Get top attackers data
+                    // Get top attackers data with blocked status
                     $top_attackers = [];
-                    $top_attackers_query = "SELECT source_ip, COUNT(*) as count, MAX(severity) as max_severity FROM alerts WHERE $where_not_blocked AND $timeFilter GROUP BY source_ip ORDER BY count DESC LIMIT 10";
+                    $top_attackers_query = "SELECT a.source_ip, COUNT(*) as count, MAX(a.severity) as max_severity, 
+                                          CASE WHEN b.ip_address IS NOT NULL THEN 1 ELSE 0 END as is_blocked
+                                          FROM alerts a
+                                          LEFT JOIN blocked_ips b ON a.source_ip = b.ip_address
+                                          WHERE $where_not_blocked AND $timeFilter 
+                                          GROUP BY a.source_ip, is_blocked 
+                                          ORDER BY count DESC LIMIT 10";
                     $top_attackers_result = $db->query($top_attackers_query);
                     while ($row = $top_attackers_result->fetchArray(SQLITE3_ASSOC)) {
                         $top_attackers[$row['source_ip']] = [
                             'count' => $row['count'],
-                            'severity' => $row['max_severity']
+                            'severity' => $row['max_severity'],
+                            'is_blocked' => (bool)$row['is_blocked']
                         ];
                     }
                     ?>
@@ -184,25 +191,42 @@ $chartData = prepareChartDatasets();
                     </div>
                 </div>
                 <div class="top-attackers-section">
-                    <h3><i class="fas fa-user-secret"></i> Principales atacantes</h3>
-                    <table class="top-attackers-table">
-                        <thead>
-                            <tr>
-                                <th>IP origen</th>
-                                <th>Alertas</th>
-                                <th>Severidad máx.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($top_attackers as $ip => $info): ?>
+                    <div class="section-header">
+                        <h3><i class="fas fa-user-secret"></i> Principales atacantes</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="top-attackers-table">
+                            <thead>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($ip); ?></td>
-                                    <td><?php echo $info['count']; ?></td>
-                                    <td><?php echo $info['severity']; ?></td>
+                                    <th>IP origen</th>
+                                    <th>Alertas</th>
+                                    <th>Severidad máx.</th>
+                                    <th>Estado</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($top_attackers as $ip => $info): ?>
+                                    <tr>
+                                        <td>
+                                            <?php echo htmlspecialchars($ip); ?>
+                                            <?php if ($info['is_blocked']): ?>
+                                                <i class="fas fa-lock" title="IP Bloqueada" style="color: #ff4444; margin-left: 5px;"></i>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo $info['count']; ?></td>
+                                        <td><?php echo $info['severity']; ?></td>
+                                        <td>
+                                            <?php if ($info['is_blocked']): ?>
+                                                <span class="status-badge blocked">Bloqueada</span>
+                                            <?php else: ?>
+                                                <span class="status-badge">Activa</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="recent-alerts">
                     <div class="section-header">
@@ -215,8 +239,9 @@ $chartData = prepareChartDatasets();
                                 <tr>
                                     <th>Hora</th>
                                     <th>IP origen</th>
-                                    <th>Alerta</th>
-                                    <th>Severidad</th>
+                                    <th>Alertas</th>
+                                    <th>Severidad máx.</th>
+                                    <th>Estado</th>
                                     <th>Acción</th>
                                     <th>Detalles</th>
                                 </tr>
@@ -227,7 +252,7 @@ $chartData = prepareChartDatasets();
                                 $results = $db->query("SELECT * FROM alerts WHERE $where_not_blocked AND $timeFilter ORDER BY timestamp DESC LIMIT 5");
                                 
                                 while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-                                    $severity_class = ($row['severity'] >= 2) ? 'high' : 'low';
+                                    $severity_class = 'severity-' . $row['severity']; // Usar el número de severidad como clase
                                     echo '<tr>';
                                     echo '<td>' . date('d-m-Y H:i', strtotime($row['timestamp'])) . '</td>';
                                     echo '<td>' . htmlspecialchars($row['source_ip']) . '</td>';

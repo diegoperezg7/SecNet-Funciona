@@ -5,7 +5,7 @@
 # 1) SSH Brute Force Attempt → solo 1 alerta cada 10 minutos por IP
 alert tcp any any -> $HOME_NET 22 (msg:"SSH Brute Force Attempt"; \
     detection_filter: track by_src, count 1, seconds 600; \
-    sid:1000001; rev:2; classtype:attempted-admin; priority:2;)
+    sid:1000001; rev:2; classtype:attempted-admin; priority:3;)
 
 # 2) Nmap HTTP Scan → solo 1 alerta cada hora por origen
 alert tcp any any -> $HOME_NET 80 (msg:"Nmap HTTP Scan"; \
@@ -61,3 +61,8 @@ alert tcp any any -> $HOME_NET 25 (msg:"SMTP Connection Attempt"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 1800; \
     sid:1000010; rev:2; classtype:attempted-admin; priority:2;)
+
+alert tcp any any -> $HOME_NET 80 (msg:"SYN Scan to HTTP port"; \
+    flags:S; \
+    threshold: type limit, track by_src, count 5, seconds 10; \
+    sid:1000011; rev:3; classtype:attempted-recon; priority:2;)
