@@ -1001,18 +1001,27 @@ footer {
     align-items: center;
     gap: 0.6rem;
 }
-.alert-card-header.severity-2, .alert-card-header.severity-3, .alert-card-header.severity-4 {
-    background: linear-gradient(90deg, #151c2b 60%, #d50000 100%);
-    border-bottom: 1.5px solid #d50000;
+/* Severidad 3 - Alta - Rojo */
+.alert-card .alert-card-header.severity-3 {
+    background: linear-gradient(90deg, #151c2b 60%, #d50000 100%) !important;
+    border-bottom: 1.5px solid #d50000 !important;
 }
-.alert-card-header.severity-1 {
-    background: linear-gradient(90deg, #151c2b 70%, #ffd600 100%);
-    border-bottom: 1.5px solid #ffd600;
-    color: #23283b;
+/* Severidad 2 - Media - Amarillo */
+.alert-card .alert-card-header.severity-2 {
+    background: linear-gradient(90deg, #151c2b 70%, #ffd600 100%) !important;
+    border-bottom: 1.5px solid #ffd600 !important;
+    color: #ffffff !important; /* Texto blanco para mejor contraste */
 }
-.alert-card-header.severity-0 {
-    background: linear-gradient(90deg, #151c2b 80%, #00c853 100%);
-    border-bottom: 1.5px solid #00c853;
+
+/* Asegurar que el ícono y el texto en el encabezado de severidad 2 sean blancos */
+.alert-card .alert-card-header.severity-2,
+.alert-card .alert-card-header.severity-2 i {
+    color: #ffffff !important;
+}
+/* Severidad 1 - Baja - Verde */
+.alert-card .alert-card-header.severity-1 {
+    background: linear-gradient(90deg, #151c2b 80%, #00c853 100%) !important;
+    border-bottom: 1.5px solid #00c853 !important;
 }
 .alert-card-body {
     padding: 1.3rem 2rem 1.5rem 2rem;
@@ -1046,15 +1055,23 @@ footer {
     box-shadow: 0 1px 6px #151c2b44;
     color: #fff;
 }
-.severity-badge.severity-2, .severity-badge.severity-3, .severity-badge.severity-4 {
-    background: #d50000;
+/* Severidad 3 - Alta - Rojo */
+.alert-detail-row .severity-badge.severity-3,
+.alert-history-table .severity-badge.severity-3 {
+    background: #d50000 !important;
+    color: #fff !important;
 }
-.severity-badge.severity-1 {
-    background: #ffd600;
-    color: #23283b;
+/* Severidad 2 - Media - Amarillo */
+.alert-detail-row .severity-badge.severity-2,
+.alert-history-table .severity-badge.severity-2 {
+    background: #ffd600 !important;
+    color: #23283b !important;
 }
-.severity-badge.severity-0 {
-    background: #00c853;
+/* Severidad 1 - Baja - Verde */
+.alert-detail-row .severity-badge.severity-1,
+.alert-history-table .severity-badge.severity-1 {
+    background: #00c853 !important;
+    color: #fff !important;
 }
 .alert-history-box {
     margin: 2.5rem auto 2rem auto;
