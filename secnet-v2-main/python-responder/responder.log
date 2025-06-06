@@ -250,3 +250,312 @@ FileNotFoundError: [Errno 2] No such file or directory: 'docker'
  * Running on http://127.0.0.1:5000
  * Running on http://10.0.2.15:5000
 2025-06-06 09:46:03,636 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:27:05,358 - responder - INFO - Base de datos inicializada en /app/database/alerts.db
+2025-06-06 10:27:05,358 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:27:05.358484)
+2025-06-06 10:27:05,358 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:27:05,358 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:27:05,362 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:27:05,363 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:27:05,373 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 10:27:05,373 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:28:03,308 - responder - INFO - Base de datos inicializada en /var/www/html/database/alerts.db
+2025-06-06 10:28:03,308 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:28:03.308922)
+2025-06-06 10:28:03,309 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:28:03,309 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:28:03,313 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:28:03,316 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:28:03,362 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 10:28:03,363 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:28:34,543 - responder - INFO - Base de datos inicializada en /var/www/html/database/alerts.db
+2025-06-06 10:28:34,543 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:28:34.543546)
+2025-06-06 10:28:34,543 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:28:34,543 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:28:34,574 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:28:34,600 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:28:34,621 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 10:28:34,626 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:39:36,282 - responder - INFO - Inicializando base de datos en: /var/www/html/database/alerts.db
+2025-06-06 10:39:36,282 - responder - INFO - Permisos establecidos en directorio: /var/www/html/database
+2025-06-06 10:39:36,282 - responder - INFO - Conectando a la base de datos: /var/www/html/database/alerts.db
+2025-06-06 10:39:36,283 - responder - INFO - Conexión a la base de datos exitosa
+2025-06-06 10:39:36,283 - responder - INFO - Permisos establecidos en archivo: /var/www/html/database/alerts.db
+2025-06-06 10:39:36,283 - responder - INFO - Creando tablas en la base de datos...
+2025-06-06 10:39:36,283 - responder - INFO - Tablas creadas exitosamente
+2025-06-06 10:39:36,283 - responder - INFO - Base de datos inicializada en /var/www/html/database/alerts.db
+2025-06-06 10:39:36,283 - responder - INFO - Conexión a la base de datos cerrada
+2025-06-06 10:39:36,284 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:39:36.283960)
+2025-06-06 10:39:36,284 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:39:36,284 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:39:36,299 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:39:36,348 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:39:36,416 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 10:39:36,416 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:46:51,149 - responder - INFO - Base de datos inicializada en /app/database/alerts.db
+2025-06-06 10:46:51,150 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:46:51.150413)
+2025-06-06 10:46:51,150 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:46:51,150 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:46:51,155 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:46:51,163 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:46:51,182 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 10:46:51,183 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:49:27,041 - responder - INFO - Base de datos inicializada en /app/database/alerts.db
+2025-06-06 10:49:27,042 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:49:27.042014)
+2025-06-06 10:49:27,042 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:49:27,042 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:49:27,049 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:49:27,051 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:49:27,081 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 10:49:27,082 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:55:12,342 - responder - INFO - Base de datos inicializada en /app/database/alerts.db
+2025-06-06 10:55:12,345 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T10:55:12.345081)
+2025-06-06 10:55:12,345 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 10:55:12,345 - responder - INFO - Posición inicial del archivo: 18710
+2025-06-06 10:55:12,348 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 10:55:12,349 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 10:55:12,387 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.56.4:5000
+2025-06-06 10:55:12,388 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 10:57:34,162 - responder - INFO - Archivo modificado: /var/log/suricata/eve.json
+2025-06-06 10:57:34,203 - responder - INFO - Procesando nueva alerta: SYN Scan to HTTP port
+2025-06-06 10:57:34,204 - responder - INFO - Procesando alerta: {
+  "timestamp": "2025-06-06T12:57:34.150469+0200",
+  "flow_id": 1772159653227011,
+  "in_iface": "eth0",
+  "event_type": "alert",
+  "src_ip": "192.168.56.5",
+  "src_port": 35366,
+  "dest_ip": "192.168.56.4",
+  "dest_port": 80,
+  "proto": "TCP",
+  "pkt_src": "wire/pcap",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 1000011,
+    "rev": 3,
+    "signature": "SYN Scan to HTTP port",
+    "category": "Attempted Information Leak",
+    "severity": 2
+  },
+  "direction": "to_server",
+  "flow": {
+    "pkts_toserver": 1,
+    "pkts_toclient": 0,
+    "bytes_toserver": 60,
+    "bytes_toclient": 0,
+    "start": "2025-06-06T12:57:34.150469+0200",
+    "src_ip": "192.168.56.5",
+    "dest_ip": "192.168.56.4",
+    "src_port": 35366,
+    "dest_port": 80
+  }
+}
+2025-06-06 10:57:34,204 - responder - INFO - Evaluando bloqueo para 192.168.56.5: categoria=Actividad sospechosa, gravedad=2, should_block=True
+2025-06-06 10:57:34,291 - responder - INFO - Intentando bloquear IP: 192.168.56.5 - Razón: SYN Scan to HTTP port [Actividad sospechosa]
+2025-06-06 10:57:34,406 - responder - ERROR - Error al ejecutar comando which iptables-persistent: Command '['which', 'iptables-persistent']' returned non-zero exit status 1.
+2025-06-06 10:57:34,419 - responder - ERROR - Error al ejecutar comando which netfilter-persistent: Command '['which', 'netfilter-persistent']' returned non-zero exit status 1.
+2025-06-06 10:57:34,437 - responder - ERROR - Error al ejecutar comando sh -c iptables-save > /etc/iptables/rules.v4: sh: 1: cannot create /etc/iptables/rules.v4: Directory nonexistent
+
+2025-06-06 10:57:34,438 - responder - WARNING - No se pudo guardar las reglas de iptables de forma persistente
+2025-06-06 10:57:34,438 - responder - INFO - IP 192.168.56.5 bloqueada correctamente
+2025-06-06 10:57:34,438 - responder - WARNING - IP bloqueada automáticamente: 192.168.56.5 - Razón: SYN Scan to HTTP port
+2025-06-06 10:57:34,553 - responder - INFO - Alerta guardada en la base de datos: 16
+2025-06-06 10:57:34,590 - responder - INFO - Alerta procesada: SYN Scan to HTTP port | Src: 192.168.56.5 | Dest: 192.168.56.4 | Severidad: 2 | Acción: IP Bloqueada: 192.168.56.5
+2025-06-06 10:58:32,924 - responder - INFO - Archivo modificado: /var/log/suricata/eve.json
+2025-06-06 10:58:32,924 - responder - INFO - Procesando nueva alerta: SSH Brute Force Attempt
+2025-06-06 10:58:32,925 - responder - INFO - Procesando alerta: {
+  "timestamp": "2025-06-06T12:58:32.902446+0200",
+  "flow_id": 216802801246433,
+  "in_iface": "eth0",
+  "event_type": "alert",
+  "src_ip": "192.168.56.5",
+  "src_port": 53388,
+  "dest_ip": "192.168.56.4",
+  "dest_port": 22,
+  "proto": "TCP",
+  "pkt_src": "wire/pcap",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 1000001,
+    "rev": 2,
+    "signature": "SSH Brute Force Attempt",
+    "category": "Attempted Administrator Privilege Gain",
+    "severity": 3
+  },
+  "direction": "to_server",
+  "flow": {
+    "pkts_toserver": 1,
+    "pkts_toclient": 0,
+    "bytes_toserver": 60,
+    "bytes_toclient": 0,
+    "start": "2025-06-06T12:58:32.902446+0200",
+    "src_ip": "192.168.56.5",
+    "dest_ip": "192.168.56.4",
+    "src_port": 53388,
+    "dest_port": 22
+  }
+}
+2025-06-06 10:58:32,925 - responder - INFO - Evaluando bloqueo para 192.168.56.5: categoria=Amenaza confirmada, gravedad=3, should_block=True
+2025-06-06 10:58:32,940 - responder - INFO - La IP 192.168.56.5 ya estaba bloqueada en iptables
+2025-06-06 10:58:33,009 - responder - INFO - Alerta guardada en la base de datos: 17
+2025-06-06 10:58:33,037 - responder - INFO - Alerta procesada: SSH Brute Force Attempt | Src: 192.168.56.5 | Dest: 192.168.56.4 | Severidad: 3 | Acción: IP ya bloqueada: 192.168.56.5
+2025-06-06 10:58:34,024 - responder - INFO - Archivo modificado: /var/log/suricata/eve.json
+2025-06-06 10:58:34,028 - responder - INFO - Procesando nueva alerta: SSH Brute Force Attempt
+2025-06-06 10:58:34,028 - responder - INFO - Procesando alerta: {
+  "timestamp": "2025-06-06T12:58:34.008921+0200",
+  "flow_id": 601265675793914,
+  "in_iface": "eth0",
+  "event_type": "alert",
+  "src_ip": "192.168.56.5",
+  "src_port": 53390,
+  "dest_ip": "192.168.56.4",
+  "dest_port": 22,
+  "proto": "TCP",
+  "pkt_src": "wire/pcap",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 1000001,
+    "rev": 2,
+    "signature": "SSH Brute Force Attempt",
+    "category": "Attempted Administrator Privilege Gain",
+    "severity": 3
+  },
+  "direction": "to_server",
+  "flow": {
+    "pkts_toserver": 1,
+    "pkts_toclient": 0,
+    "bytes_toserver": 60,
+    "bytes_toclient": 0,
+    "start": "2025-06-06T12:58:34.008921+0200",
+    "src_ip": "192.168.56.5",
+    "dest_ip": "192.168.56.4",
+    "src_port": 53390,
+    "dest_port": 22
+  }
+}
+2025-06-06 10:58:34,028 - responder - INFO - Evaluando bloqueo para 192.168.56.5: categoria=Amenaza confirmada, gravedad=3, should_block=True
+2025-06-06 10:58:34,037 - responder - INFO - La IP 192.168.56.5 ya estaba bloqueada en iptables
+2025-06-06 10:58:34,112 - responder - INFO - Alerta guardada en la base de datos: 18
+2025-06-06 10:58:34,136 - responder - INFO - Alerta procesada: SSH Brute Force Attempt | Src: 192.168.56.5 | Dest: 192.168.56.4 | Severidad: 3 | Acción: IP ya bloqueada: 192.168.56.5
+2025-06-06 10:58:34,141 - responder - INFO - Archivo modificado: /var/log/suricata/eve.json
+2025-06-06 10:58:34,144 - responder - INFO - Procesando nueva alerta: SYN Scan to HTTP port
+2025-06-06 10:58:34,145 - responder - INFO - Procesando alerta: {
+  "timestamp": "2025-06-06T12:58:34.108884+0200",
+  "flow_id": 749128566096833,
+  "in_iface": "eth0",
+  "event_type": "alert",
+  "src_ip": "192.168.56.5",
+  "src_port": 53388,
+  "dest_ip": "192.168.56.4",
+  "dest_port": 80,
+  "proto": "TCP",
+  "pkt_src": "wire/pcap",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 1000011,
+    "rev": 3,
+    "signature": "SYN Scan to HTTP port",
+    "category": "Attempted Information Leak",
+    "severity": 2
+  },
+  "direction": "to_server",
+  "flow": {
+    "pkts_toserver": 1,
+    "pkts_toclient": 0,
+    "bytes_toserver": 60,
+    "bytes_toclient": 0,
+    "start": "2025-06-06T12:58:34.108884+0200",
+    "src_ip": "192.168.56.5",
+    "dest_ip": "192.168.56.4",
+    "src_port": 53388,
+    "dest_port": 80
+  }
+}
+2025-06-06 10:58:34,145 - responder - INFO - Evaluando bloqueo para 192.168.56.5: categoria=Actividad sospechosa, gravedad=2, should_block=True
+2025-06-06 10:58:34,164 - responder - INFO - La IP 192.168.56.5 ya estaba bloqueada en iptables
+2025-06-06 10:58:34,232 - responder - INFO - Alerta guardada en la base de datos: 19
+2025-06-06 10:58:34,252 - responder - INFO - Alerta procesada: SYN Scan to HTTP port | Src: 192.168.56.5 | Dest: 192.168.56.4 | Severidad: 2 | Acción: IP ya bloqueada: 192.168.56.5
+2025-06-06 10:58:34,255 - responder - INFO - Archivo modificado: /var/log/suricata/eve.json
+2025-06-06 10:58:34,255 - responder - INFO - Procesando nueva alerta: SYN Scan to HTTP port
+2025-06-06 10:58:34,257 - responder - INFO - Procesando alerta: {
+  "timestamp": "2025-06-06T12:58:34.210729+0200",
+  "flow_id": 623602013510319,
+  "in_iface": "eth0",
+  "event_type": "alert",
+  "src_ip": "192.168.56.5",
+  "src_port": 53390,
+  "dest_ip": "192.168.56.4",
+  "dest_port": 80,
+  "proto": "TCP",
+  "pkt_src": "wire/pcap",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 1000011,
+    "rev": 3,
+    "signature": "SYN Scan to HTTP port",
+    "category": "Attempted Information Leak",
+    "severity": 2
+  },
+  "direction": "to_server",
+  "flow": {
+    "pkts_toserver": 1,
+    "pkts_toclient": 0,
+    "bytes_toserver": 60,
+    "bytes_toclient": 0,
+    "start": "2025-06-06T12:58:34.210729+0200",
+    "src_ip": "192.168.56.5",
+    "dest_ip": "192.168.56.4",
+    "src_port": 53390,
+    "dest_port": 80
+  }
+}
+2025-06-06 10:58:34,257 - responder - INFO - Evaluando bloqueo para 192.168.56.5: categoria=Actividad sospechosa, gravedad=2, should_block=True
+2025-06-06 10:58:34,266 - responder - INFO - La IP 192.168.56.5 ya estaba bloqueada en iptables
+2025-06-06 10:58:34,323 - responder - INFO - Alerta guardada en la base de datos: 20
+2025-06-06 10:58:34,349 - responder - INFO - Alerta procesada: SYN Scan to HTTP port | Src: 192.168.56.5 | Dest: 192.168.56.4 | Severidad: 2 | Acción: IP ya bloqueada: 192.168.56.5
+2025-06-06 11:00:41,812 - responder - INFO - Base de datos inicializada en /app/database/alerts.db
+2025-06-06 11:00:41,815 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T11:00:41.815571)
+2025-06-06 11:00:41,815 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 11:00:41,816 - responder - INFO - Posición inicial del archivo: 21829
+2025-06-06 11:00:41,819 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 11:00:41,820 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 11:00:41,853 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 11:00:41,854 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-06 11:10:30,044 - responder - INFO - Base de datos inicializada en /app/database/alerts.db
+2025-06-06 11:10:30,045 - responder - INFO - Iniciando monitoreo de eventos nuevos (desde 2025-06-06T11:10:30.045122)
+2025-06-06 11:10:30,045 - responder - INFO - Monitoreando archivo: /var/log/suricata/eve.json
+2025-06-06 11:10:30,045 - responder - INFO - Posición inicial del archivo: 21829
+2025-06-06 11:10:30,047 - responder - INFO - Observer iniciado: vigilando /var/log/suricata/eve.json
+2025-06-06 11:10:30,049 - responder - INFO - Servidor Flask iniciado en el puerto 5000
+2025-06-06 11:10:30,084 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.0.2.15:5000
+2025-06-06 11:10:30,084 - werkzeug - INFO - [33mPress CTRL+C to quit[0m

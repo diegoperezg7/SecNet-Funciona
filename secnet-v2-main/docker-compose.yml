@@ -29,10 +29,19 @@ services:
       - ./python-responder:/app
       - ./database:/app/database
       - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/iptables:/etc/iptables  # Para persistir reglas de iptables
     environment:
+      - IPTABLES_SAVE_ON_STOP=1
+      - IPTABLES_SAVE_ON_RESTART=1
       - PYTHONUNBUFFERED=1
+    tmpfs:
+      - /run
+      - /run/lock
+    security_opt:
+      - apparmor:unconfined
+      - seccomp=unconfined
     working_dir: /app
-    command: sh -c "mkdir -p /app/database && chmod 777 /app/database && python responder.py"
+    command: sh -c "mkdir -p /app/database && chmod 777 /app/database && chmod +x /app/startup.sh && /app/startup.sh"
     depends_on:
       - suricata
     restart: unless-stopped
