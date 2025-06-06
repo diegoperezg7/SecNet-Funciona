@@ -620,6 +620,7 @@ header {
     border-radius: var(--radius-md);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
+    table-layout: fixed; /* Asegura que las columnas tengan el mismo ancho */
 }
 
 .top-attackers-table th, .top-attackers-table td,
@@ -628,6 +629,44 @@ header {
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     color: var(--text-light);
+    word-wrap: break-word; /* Permite que el texto se ajuste */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Añade puntos suspensivos si el texto es muy largo */
+}
+
+/* Establecer anchos específicos para cada columna de la tabla de atacantes */
+.top-attackers-table {
+    width: 100%;
+}
+
+.top-attackers-table th:nth-child(1),
+.top-attackers-table td:nth-child(1) {
+    width: 25%; /* IP origen */
+    padding-left: 5rem; /* Añadir más espacio a la izquierda */
+}
+
+.top-attackers-table th:nth-child(2),
+.top-attackers-table td:nth-child(2) {
+    width: 15%; /* Alertas */
+    text-align: center;
+}
+
+.top-attackers-table th:nth-child(3),
+.top-attackers-table td:nth-child(3) {
+    width: 15%; /* Gravedad máx. */
+    text-align: center;
+}
+
+.top-attackers-table th:nth-child(4),
+.top-attackers-table td:nth-child(4) {
+    width: 20%; /* Estado */
+    text-align: center;
+}
+
+.top-attackers-table th:nth-child(5),
+.top-attackers-table td:nth-child(5) {
+    width: 25%; /* Acciones */
+    text-align: center;
 }
 
 .top-attackers-table th, .recent-alerts table th {
@@ -1196,6 +1235,107 @@ td .gravedad-badge.gravedad-1 {
     background-color: #28a74533 !important;
     color: #28a745 !important;
     border-color: #28a745 !important;
+}
+
+/* Estilos para la celda de acciones */
+.actions-cell {
+    text-align: center;
+    white-space: nowrap;
+    padding: 0.5rem !important;
+}
+
+/* Estilos para el botón desbloquear IP */
+.unblock-ip {
+    background: linear-gradient(135deg, #FFC107, #FF9800);
+    color: #3E2723;
+    border: none;
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    opacity: 0.9;
+}
+
+.unblock-ip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(255, 152, 0, 0.3);
+    background: linear-gradient(135deg, #FFD54F, #FFA000);
+    opacity: 1;
+}
+
+.unblock-ip:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(255, 152, 0, 0.2);
+}
+
+.unblock-ip i {
+    transition: transform 0.2s ease;
+    font-size: 0.9em;
+}
+
+.unblock-ip:hover i {
+    transform: rotate(5deg);
+}
+
+/* Efecto sutil al pasar el cursor */
+.unblock-ip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(0, 0, 0, 0.05) 100%
+    );
+    transition: all 0.3s ease;
+    opacity: 0.5;
+}
+
+.unblock-ip:hover::after {
+    opacity: 0.8;
+}
+
+/* Estilo para el botón deshabilitado */
+.unblock-ip:disabled {
+    background: #757575;
+    color: #BDBDBD;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    opacity: 0.7;
+}
+
+.unblock-ip:disabled:hover {
+    background: #757575;
+    box-shadow: none;
+}
+
+.unblock-ip:disabled::after {
+    display: none;
+    transition: transform 0.3s ease;
+}
+
+.unblock-ip:hover i {
+    transform: scale(1.1) rotate(-10deg);
+}
+
+.text-muted {
+    color: #6c757d;
 }
 
 /* Efecto hover sutil */

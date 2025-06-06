@@ -695,3 +695,114 @@
 [8 - W#03-eth0] 2025-06-05 20:51:41 Info: ioctl: eth0: MTU 1500
 [9 - W#04-eth0] 2025-06-05 20:51:41 Info: ioctl: eth0: MTU 1500
 [1 - Suricata-Main] 2025-06-05 20:51:41 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-05 21:17:38 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-05 21:17:39 Info: suricata: time elapsed 1558.257s
+[1 - Suricata-Main] 2025-06-05 21:17:40 Notice: device: eth0: packets: 56498, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-05 21:17:42 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: detect: 1 rule files processed. 11 rules successfully loaded, 0 rules failed, 0
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: detect: 11 signatures processed. 1 are IP-only rules, 2 are inspecting packet payload, 1 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-05 21:17:42 Warning: detect: rule 1000011: SYN-only to port(s) 80:80 w/o direction specified, disabling for toclient direction
+[1 - Suricata-Main] 2025-06-05 21:17:42 Info: runmodes: eth0: creating 4 threads
+[7 - W#01-eth0] 2025-06-05 21:17:42 Info: ioctl: eth0: MTU 1500
+[8 - W#02-eth0] 2025-06-05 21:17:42 Info: ioctl: eth0: MTU 1500
+[9 - W#03-eth0] 2025-06-05 21:17:42 Info: ioctl: eth0: MTU 1500
+[10 - W#04-eth0] 2025-06-05 21:17:42 Info: ioctl: eth0: MTU 1500
+[1 - Suricata-Main] 2025-06-05 21:17:42 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-06 11:20:27 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-06 11:20:27 Info: suricata: time elapsed 50565.160s
+[1 - Suricata-Main] 2025-06-06 11:20:28 Notice: device: eth0: packets: 81423, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-06 11:20:48 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: detect: 1 rule files processed. 11 rules successfully loaded, 0 rules failed, 0
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: detect: 11 signatures processed. 1 are IP-only rules, 2 are inspecting packet payload, 1 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-06 11:20:48 Warning: detect: rule 1000011: SYN-only to port(s) 80:80 w/o direction specified, disabling for toclient direction
+[1 - Suricata-Main] 2025-06-06 11:20:48 Info: runmodes: eth0: creating 4 threads
+[7 - W#01-eth0] 2025-06-06 11:20:48 Info: ioctl: eth0: MTU 1500
+[8 - W#02-eth0] 2025-06-06 11:20:48 Info: ioctl: eth0: MTU 1500
+[9 - W#03-eth0] 2025-06-06 11:20:48 Info: ioctl: eth0: MTU 1500
+[10 - W#04-eth0] 2025-06-06 11:20:48 Info: ioctl: eth0: MTU 1500
+[1 - Suricata-Main] 2025-06-06 11:20:48 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-06 11:28:41 Notice: suricata: Signal Received.  Stopping engine.
+[1 - Suricata-Main] 2025-06-06 11:28:42 Info: suricata: time elapsed 474.151s
+[1 - Suricata-Main] 2025-06-06 11:28:43 Notice: device: eth0: packets: 10842, drops: 0 (0.00%), invalid chksum: 0
+[1 - Suricata-Main] 2025-06-06 11:29:02 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-06 11:29:02 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-06 11:29:02 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-06 11:29:02 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-06 11:29:02 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-06 11:29:03 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-06 11:29:03 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-06 11:29:03 Info: detect: 1 rule files processed. 11 rules successfully loaded, 0 rules failed, 0
+[1 - Suricata-Main] 2025-06-06 11:29:03 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-06 11:29:03 Info: detect: 11 signatures processed. 1 are IP-only rules, 2 are inspecting packet payload, 1 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-06 11:29:03 Warning: detect: rule 1000011: SYN-only to port(s) 80:80 w/o direction specified, disabling for toclient direction
+[1 - Suricata-Main] 2025-06-06 11:29:03 Info: runmodes: eth0: creating 4 threads
+[7 - W#01-eth0] 2025-06-06 11:29:03 Info: ioctl: eth0: MTU 1500
+[8 - W#02-eth0] 2025-06-06 11:29:03 Info: ioctl: eth0: MTU 1500
+[9 - W#03-eth0] 2025-06-06 11:29:03 Info: ioctl: eth0: MTU 1500
+[10 - W#04-eth0] 2025-06-06 11:29:03 Info: ioctl: eth0: MTU 1500
+[1 - Suricata-Main] 2025-06-06 11:29:03 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-06 11:31:37 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-06 11:31:37 Info: cpu: CPUs/cores online: 4
+[1 - Suricata-Main] 2025-06-06 11:31:37 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-06 11:31:37 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-06 11:31:37 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-06 11:31:38 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-06 11:31:38 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-06 11:31:38 Info: detect: 1 rule files processed. 11 rules successfully loaded, 0 rules failed, 0
+[1 - Suricata-Main] 2025-06-06 11:31:38 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-06 11:31:38 Info: detect: 11 signatures processed. 1 are IP-only rules, 2 are inspecting packet payload, 1 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-06 11:31:38 Warning: detect: rule 1000011: SYN-only to port(s) 80:80 w/o direction specified, disabling for toclient direction
+[1 - Suricata-Main] 2025-06-06 11:31:38 Info: runmodes: eth0: creating 4 threads
+[8 - W#01-eth0] 2025-06-06 11:31:39 Info: ioctl: eth0: MTU 1500
+[9 - W#02-eth0] 2025-06-06 11:31:39 Info: ioctl: eth0: MTU 1500
+[10 - W#03-eth0] 2025-06-06 11:31:39 Info: ioctl: eth0: MTU 1500
+[11 - W#04-eth0] 2025-06-06 11:31:39 Info: ioctl: eth0: MTU 1500
+[1 - Suricata-Main] 2025-06-06 11:31:39 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-06 11:40:02 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: cpu: CPUs/cores online: 7
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: detect: 1 rule files processed. 11 rules successfully loaded, 0 rules failed, 0
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: detect: 11 signatures processed. 1 are IP-only rules, 2 are inspecting packet payload, 1 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-06 11:40:02 Warning: detect: rule 1000011: SYN-only to port(s) 80:80 w/o direction specified, disabling for toclient direction
+[1 - Suricata-Main] 2025-06-06 11:40:02 Info: runmodes: eth0: creating 4 threads
+[7 - W#01-eth0] 2025-06-06 11:40:03 Info: ioctl: eth0: MTU 1500
+[8 - W#02-eth0] 2025-06-06 11:40:03 Info: ioctl: eth0: MTU 1500
+[9 - W#03-eth0] 2025-06-06 11:40:03 Info: ioctl: eth0: MTU 1500
+[10 - W#04-eth0] 2025-06-06 11:40:03 Info: ioctl: eth0: MTU 1500
+[1 - Suricata-Main] 2025-06-06 11:40:04 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.
+[1 - Suricata-Main] 2025-06-06 11:45:59 Notice: suricata: This is Suricata version 7.0.10 RELEASE running in SYSTEM mode
+[1 - Suricata-Main] 2025-06-06 11:45:59 Info: cpu: CPUs/cores online: 7
+[1 - Suricata-Main] 2025-06-06 11:45:59 Info: suricata: Setting engine mode to IDS mode by default
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: app-layer-ftp: Parsed disabled for ftp protocol. Protocol detectionstill on.
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: app-layer-smtp: Protocol detection and parser disabled for smtp protocol.
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: suricata: No 'host-mode': suricata is in IDS mode, using default setting 'sniffer-only'
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: logopenfile: eve-log output device (regular) initialized: /var/log/suricata/eve.json
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: detect: 1 rule files processed. 11 rules successfully loaded, 0 rules failed, 0
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: threshold-config: Threshold config parsed: 0 rule(s) found
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: detect: 11 signatures processed. 1 are IP-only rules, 2 are inspecting packet payload, 1 inspect application layer, 0 are decoder event only
+[1 - Suricata-Main] 2025-06-06 11:46:00 Warning: detect: rule 1000011: SYN-only to port(s) 80:80 w/o direction specified, disabling for toclient direction
+[1 - Suricata-Main] 2025-06-06 11:46:00 Info: runmodes: eth0: creating 4 threads
+[7 - W#01-eth0] 2025-06-06 11:46:01 Info: ioctl: eth0: MTU 1500
+[8 - W#02-eth0] 2025-06-06 11:46:01 Info: ioctl: eth0: MTU 1500
+[9 - W#03-eth0] 2025-06-06 11:46:01 Info: ioctl: eth0: MTU 1500
+[10 - W#04-eth0] 2025-06-06 11:46:01 Info: ioctl: eth0: MTU 1500
+[1 - Suricata-Main] 2025-06-06 11:46:01 Notice: threads: Threads created -> W: 4 FM: 1 FR: 1   Engine started.

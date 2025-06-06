@@ -222,6 +222,7 @@ $chartData = prepareChartDatasets();
                                                 <span class="status-badge">Activa</span>
                                             <?php endif; ?>
                                         </td>
+
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -246,13 +247,17 @@ $chartData = prepareChartDatasets();
                             </thead>
                             <tbody>
                                 <?php
-                                // Get recent alerts
-                                $results = $db->query("SELECT * FROM alerts WHERE $where_not_blocked AND $timeFilter ORDER BY timestamp DESC LIMIT 5");
+                                // Get recent alerts (limit to 5 most recent)
+                                $results = $db->query("SELECT * FROM alerts WHERE $where_not_blocked ORDER BY timestamp DESC LIMIT 5");
                                 
                                 while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-                                    // Las clases de gravedad ahora usan gravedad-badge
+                                    // Convert UTC timestamp to Madrid timezone
+                                    $date = new DateTime($row['timestamp'], new DateTimeZone('UTC'));
+                                    $date->setTimezone(new DateTimeZone('Europe/Madrid'));
+                                    $formattedDate = $date->format('d-m-Y H:i');
+                                    
                                     echo '<tr>';
-                                    echo '<td>' . date('d-m-Y H:i', strtotime($row['timestamp'])) . '</td>';
+                                    echo '<td>' . htmlspecialchars($formattedDate) . '</td>';
                                     echo '<td>' . htmlspecialchars($row['source_ip']) . '</td>';
                                     echo '<td>' . htmlspecialchars($row['alert_message']) . '</td>';
                                     echo '<td><span class="gravedad-badge gravedad-' . (int)$row['severity'] . '">' . htmlspecialchars($row['severity']) . '</span></td>';
@@ -328,6 +333,90 @@ $chartData = prepareChartDatasets();
     </script>
     <script src="/js/main.clean.js"></script>
     <script>
+        // Función para mostrar notificación
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `alert-notification ${type}`;
+            notification.textContent = message;
+            document.getElementById('alertNotifications').appendChild(notification);
+            
+            // Eliminar la notificación después de 5 segundos
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Manejar el clic en el botón de desbloquear IP
+        document.addEventListener('click', async function(e) {
+            if (e.target.closest('.unblock-ip') || e.target.classList.contains('fa-unlock')) {
+                const button = e.target.closest('.unblock-ip') || e.target.closest('button');
+                const ip = button.dataset.ip;
+                const row = button.closest('tr');
+                
+                if (!ip) return;
+                
+                // Mostrar confirmación
+                if (!confirm(`¿Estás seguro de que deseas desbloquear la IP ${ip}?`)) {
+                    return;
+                }
+                
+                // Deshabilitar el botón mientras se procesa la solicitud
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                
+                try {
+                    const response = await fetch('/api/unblock-ip.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ ip: ip })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Error en la respuesta del servidor');
+                    }
+                    
+                    if (result.success) {
+                        showNotification(`IP ${ip} desbloqueada correctamente`, 'success');
+                        
+                        // Actualizar la interfaz sin recargar la página
+                        if (row) {
+                            // Actualizar el estado a "Activa"
+                            const statusCell = row.querySelector('td:nth-child(4)');
+                            if (statusCell) {
+                                statusCell.innerHTML = '<span class="status-badge">Activa</span>';
+                            }
+                            
+                            // Actualizar el icono de bloqueo
+                            const lockIcon = row.querySelector('.fa-lock');
+                            if (lockIcon) {
+                                lockIcon.remove();
+                            }
+                            
+                            // Actualizar el botón de acciones
+                            const actionsCell = row.querySelector('.actions-cell');
+                            if (actionsCell) {
+                                actionsCell.innerHTML = '<span class="text-muted">-</span>';
+                            }
+                        } else {
+                            // Si no podemos actualizar la interfaz, recargar la página
+                            setTimeout(() => window.location.reload(), 1000);
+                        }
+                    } else {
+                        throw new Error(result.message || 'Error al desbloquear la IP');
+                    }
+                } catch (error) {
+                    console.error('Error al desbloquear la IP:', error);
+                    showNotification(`Error al desbloquear la IP: ${error.message}`, 'error');
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-unlock"></i> DESBLOQUEAR IP';
+                }
+            }
+        });
+        
         // Inicializar los gráficos cuando el DOM esté completamente cargado
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM completamente cargado, inicializando gráficos...');

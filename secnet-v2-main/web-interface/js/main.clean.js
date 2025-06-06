@@ -23,8 +23,12 @@ function initCharts() {
         alertTypesCtx.parentNode.innerHTML += '<p class="no-data">No hay datos disponibles para mostrar</p>';
     } else {
         console.log('Creando gráfico de tipos de alertas con datos:', window.alertTypesData);
+        // Destruir el gráfico anterior si existe
+        if (alertTypesChart) {
+            alertTypesChart.destroy();
+        }
         // Gráfico de tipos de alertas
-        new Chart(alertTypesCtx.getContext('2d'), {
+        alertTypesChart = new Chart(alertTypesCtx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: window.alertTypesData.labels,
@@ -43,7 +47,7 @@ function initCharts() {
                     legend: { display: false },
                     title: { 
                         display: true, 
-                        text: 'Distribución por Tipo de Alerta',
+                        text: '',
                         font: { size: 16 }
                     }
                 },
@@ -69,10 +73,15 @@ function initCharts() {
         }
     } else {
         console.log('Creando gráfico de gravedad con datos:', window.severityData);
+        // Destruir el gráfico anterior si existe
+        if (severityChart) {
+            severityChart.destroy();
+        }
+        
         // Mapa de colores y etiquetas para la gravedad
         const severityConfig = {
             '1': { 
-                color: '#00ffae',
+                color: '#00c27e',  // Verde intermedio
                 label: 'Baja (1)'
             },
             '2': {
@@ -90,7 +99,7 @@ function initCharts() {
         };
         
         // Gráfico de distribución de gravedad
-        new Chart(severityCtx.getContext('2d'), {
+        severityChart = new Chart(severityCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: window.severityData.labels,
@@ -134,7 +143,7 @@ function initCharts() {
                     },
                     title: { 
                         display: true, 
-                        text: 'Distribución de Gravedad', 
+                        text: '', 
                         font: { size: 16 },
                         padding: { bottom: 15 },
                         color: '#e0e6ed' // Color del título para mejor contraste
@@ -147,21 +156,42 @@ function initCharts() {
     }
 }
 
+// Variables para almacenar las instancias de los gráficos
+let alertTypesChart = null;
+let severityChart = null;
+
+// Función para destruir los gráficos existentes
+function destroyCharts() {
+    if (alertTypesChart) {
+        alertTypesChart.destroy();
+        alertTypesChart = null;
+    }
+    if (severityChart) {
+        severityChart.destroy();
+        severityChart = null;
+    }
+}
+
 // Inicializar los gráficos cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM completamente cargado, inicializando gráficos...');
-    // Verificar si Chart.js está cargado
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js no se ha cargado correctamente');
-        // Mostrar un mensaje de error en la página
-        const chartContainers = document.querySelectorAll('.chart-container');
-        chartContainers.forEach(container => {
-            container.innerHTML = '<p class="error">Error: No se pudo cargar la biblioteca de gráficos. Por favor, recarga la página.</p>';
-        });
-        return;
+    // Solo inicializar si no estamos en la página de detalles de alerta
+    if (!document.getElementById('alertDetails')) {
+        console.log('DOM completamente cargado, inicializando gráficos...');
+        // Verificar si Chart.js está cargado
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js no se ha cargado correctamente');
+            return;
+        }
+        // Destruir gráficos existentes antes de inicializar nuevos
+        destroyCharts();
+        // Verificar si la función initCharts existe
+        if (typeof initCharts === 'function') {
+            console.log('Inicializando gráficos...');
+            initCharts();
+        } else {
+            console.error('La función initCharts no está definida');
+        }
     }
-    
-    // Verificar si los datos están disponibles
     if (!window.alertTypesData || !window.severityData) {
         console.error('No se encontraron los datos para los gráficos');
         return;

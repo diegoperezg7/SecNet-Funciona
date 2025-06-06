@@ -150,15 +150,8 @@ def block_ip(ip_address, reason):
         # Función para ejecutar comandos con manejo de errores
         def run_command(cmd, use_sudo=False):
             try:
-                # Si es un comando de iptables, usamos docker para ejecutarlo en el host
-                if cmd[0] == 'iptables' or (len(cmd) > 1 and 'iptables' in cmd[1]):
-                    docker_cmd = ["docker", "run", "--rm", "--privileged", "--net=host"]
-                    if use_sudo:
-                        docker_cmd.extend(["-v", "/usr/bin/sudo:/usr/bin/sudo"])
-                        cmd = ["sudo"] + cmd
-                    docker_cmd.extend(["alpine:latest"] + cmd)
-                    cmd = docker_cmd
-                elif use_sudo:
+                # Ejecutar directamente los comandos ya que estamos en modo host
+                if use_sudo:
                     cmd = ["sudo"] + cmd
                 
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
