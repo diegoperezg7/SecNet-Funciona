@@ -105,6 +105,12 @@ try {
             continue;
         }
         
+        // Ensure SYN scan alerts always have severity 2
+        if (stripos($alert['alert_message'], 'SYN Scan') !== false || 
+            stripos($alert['alert_message'], 'Port Scan') !== false) {
+            $alert['severity'] = 2;
+        }
+        
         $filteredAlerts[] = $alert;
     }
 

@@ -3,66 +3,83 @@
 # -------------------
 
 # 1) SSH Brute Force Attempt → solo 1 alerta cada 10 minutos por IP
+# Severidad: Alta (3) - Intento de fuerza bruta contra SSH
 alert tcp any any -> $HOME_NET 22 (msg:"SSH Brute Force Attempt"; \
     detection_filter: track by_src, count 1, seconds 600; \
     sid:1000001; rev:2; classtype:attempted-admin; priority:3;)
 
 # 2) Nmap HTTP Scan → solo 1 alerta cada hora por origen
+# Severidad: Media (2) - Escaneo de puertos HTTP
 alert tcp any any -> $HOME_NET 80 (msg:"Nmap HTTP Scan"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 3600; \
     sid:1000002; rev:2; classtype:attempted-recon; priority:2;)
 
 # 3) SMB Enumeration Attempt → 1 alerta cada 30 min por origen
+# Severidad: Alta (3) - Intento de enumeración SMB
 alert tcp any any -> $HOME_NET 445 (msg:"SMB Enumeration Attempt"; \
     flow:to_server,established; \
     content:"|00 00 00 00|"; depth:4; \
     detection_filter: track by_src, count 1, seconds 1800; \
-    sid:1000003; rev:2; classtype:attempted-admin; priority:2;)
+    sid:1000003; rev:2; classtype:attempted-admin; priority:3;)
 
 # 4) High DNS Query Volume → 1 alerta cada 10 min por origen
+# Severidad: Media (2) - Alto volumen de consultas DNS
 alert udp any any -> $HOME_NET 53 (msg:"High DNS Query Volume"; \
     content:"|01 00 01 00 00 01 00 00 00 00 00 00|"; depth:12; \
     threshold: type threshold, track by_src, count 50, seconds 60; \
-    sid:1000004; rev:1; classtype:trojan-activity; priority:1;)
+    sid:1000004; rev:1; classtype:trojan-activity; priority:2;)
 
 # 5) SSL/TLS Cipher Suite Downgrade → solo 1 alerta cada hora
+# Severidad: Media (2) - Intento de conexión SSL/TLS insegura
 alert tls any any -> $HOME_NET any (msg:"SSL/TLS Connection Attempt"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 3600; \
     sid:1000005; rev:2; classtype:attempted-admin; priority:2;)
 
 # 6) Telnet Connection Attempt → 1 alerta cada 30 min
+# Severidad: Alta (3) - Intento de conexión Telnet (protocolo inseguro)
 alert tcp any any -> $HOME_NET 23 (msg:"Telnet Connection Attempt"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 1800; \
-    sid:1000006; rev:2; classtype:attempted-admin; priority:2;)
+    sid:1000006; rev:2; classtype:attempted-admin; priority:3;)
 
 # 7) MS-SQL Connection Attempt → 1 alerta cada 30 min
+# Severidad: Media (2) - Intento de conexión a MS-SQL
 alert tcp any any -> $HOME_NET 1433 (msg:"MS-SQL Connection Attempt"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 1800; \
     sid:1000007; rev:2; classtype:attempted-user; priority:2;)
 
 # 8) MySQL Connection Attempt → 1 alerta cada 30 min
+# Severidad: Media (2) - Intento de conexión a MySQL
 alert tcp any any -> $HOME_NET 3306 (msg:"MySQL Connection Attempt"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 1800; \
     sid:1000008; rev:2; classtype:attempted-user; priority:2;)
 
 # 9) ICMP Ping (Network Scan) → 1 alerta cada 30 min
+# Severidad: Baja (1) - Escaneo de red mediante ICMP
 alert icmp any any -> $HOME_NET any (msg:"ICMP Ping"; \
     icode:0; \
     detection_filter: track by_src, count 1, seconds 1800; \
     sid:1000009; rev:2; classtype:network-scan; priority:1;)
 
 # 10) SMTP Connection Attempt → 1 alerta cada 30 min
+# Severidad: Media (2) - Intento de conexión SMTP
 alert tcp any any -> $HOME_NET 25 (msg:"SMTP Connection Attempt"; \
     flow:to_server,established; \
     detection_filter: track by_src, count 1, seconds 1800; \
     sid:1000010; rev:2; classtype:attempted-admin; priority:2;)
 
+# 11) SYN Scan to HTTP port → Detección de escaneo de puertos
+# Solo alerta si hay más de 5 intentos en 10 segundos (1 alerta cada 10 minutos por IP)
+# Severidad: Media (2) - Escaneo de puertos mediante SYN
 alert tcp any any -> $HOME_NET 80 (msg:"SYN Scan to HTTP port"; \
+    flow:to_server; \
     flags:S; \
-    threshold: type limit, track by_src, count 5, seconds 10; \
-    sid:1000011; rev:3; classtype:attempted-recon; priority:2;)
+    threshold: type threshold, track by_src, count 5, seconds 10; \
+    sid:1000011; rev:5; \
+    classtype:attempted-recon; \
+    priority:2; \
+    metadata:policy security-ips drop;)

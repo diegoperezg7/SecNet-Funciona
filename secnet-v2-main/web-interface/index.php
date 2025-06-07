@@ -90,21 +90,21 @@
                         $severity_dist[$row['severity']] = $row['count'];
                     }
 
-                    // Get top attackers data with blocked status
-                    $top_attackers = [];
-                    $top_attackers_query = "SELECT a.source_ip, COUNT(*) as count, MAX(a.severity) as max_severity, 
-                                          CASE WHEN b.ip_address IS NOT NULL THEN 1 ELSE 0 END as is_blocked
-                                          FROM alerts a
-                                          LEFT JOIN blocked_ips b ON a.source_ip = b.ip_address
-                                          WHERE $where_not_blocked AND $timeFilter 
-                                          GROUP BY a.source_ip, is_blocked 
-                                          ORDER BY count DESC LIMIT 10";
-                    $top_attackers_result = $db->query($top_attackers_query);
-                    while ($row = $top_attackers_result->fetchArray(SQLITE3_ASSOC)) {
-                        $top_attackers[$row['source_ip']] = [
-                            'count' => $row['count'],
-                            'severity' => $row['max_severity'],
-                            'is_blocked' => (bool)$row['is_blocked']
+                    // Get blocked IPs with their details
+                    $blocked_ips_list = [];
+                    $blocked_ips_query = "SELECT b.ip_address, b.timestamp, b.reason, 
+                                         (SELECT COUNT(*) FROM alerts WHERE source_ip = b.ip_address) as alert_count,
+                                         (SELECT MAX(severity) FROM alerts WHERE source_ip = b.ip_address) as max_severity
+                                         FROM blocked_ips b
+                                         ORDER BY b.timestamp DESC LIMIT 10";
+                    $blocked_ips_result = $db->query($blocked_ips_query);
+                    while ($row = $blocked_ips_result->fetchArray(SQLITE3_ASSOC)) {
+                        $blocked_ips_list[$row['ip_address']] = [
+                            'timestamp' => $row['timestamp'],
+                            'reason' => $row['reason'],
+                            'alert_count' => $row['alert_count'],
+                            'max_severity' => $row['max_severity'] ?: 0,
+                            'is_blocked' => true
                         ];
                     }
                     ?>
@@ -191,49 +191,99 @@ $chartData = prepareChartDatasets();
                         </div>
                     </div>
                 </div>
-                <div class="top-attackers-section">
+                <section class="blocked-ips-section">
                     <div class="section-header">
-                        <h3><i class="fas fa-user-secret"></i> Principales atacantes</h3>
+                        <h3><i class="fas fa-lock"></i> IPs Bloqueadas</h3>
                     </div>
                     <div class="table-container">
-                        <table class="top-attackers-table">
+                        <table>
+                            <colgroup>
+                                <col style="width: 180px;">
+                                <col style="width: 160px;">
+                                <col style="width: 100px;">
+                                <col style="width: 120px;">
+                                <col style="min-width: 200px;">
+                                <col style="width: 130px;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>IP origen</th>
+                                    <th>Dirección IP</th>
+                                    <th>Fecha de Bloqueo</th>
                                     <th>Alertas</th>
-                                    <th>Gravedad máx.</th>
+                                    <th>Gravedad</th>
+                                    <th>Razón</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($top_attackers as $ip => $info): ?>
+                                <?php if (empty($blocked_ips_list)): ?>
                                     <tr>
-                                        <td>
-                                            <?php echo htmlspecialchars($ip); ?>
-                                            <?php if ($info['is_blocked']): ?>
-                                                <i class="fas fa-lock" title="IP Bloqueada" style="color: #ff4444; margin-left: 5px;"></i>
-                                            <?php endif; ?>
+                                        <td colspan="6" class="no-data">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span>No hay direcciones IP bloqueadas actualmente</span>
                                         </td>
-                                        <td><?php echo $info['count']; ?></td>
-                                        <td><?php echo $info['severity']; ?></td>
-                                        <td>
-                                            <?php if ($info['is_blocked']): ?>
-                                                <span class="status-badge blocked">Bloqueada</span>
-                                            <?php else: ?>
-                                                <span class="status-badge">Activa</span>
-                                            <?php endif; ?>
-                                        </td>
-
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php 
+                                    $currentDate = new DateTime('now', new DateTimeZone('UTC'));
+                                    foreach ($blocked_ips_list as $ip => $info): 
+                                        $date = new DateTime($info['timestamp'], new DateTimeZone('UTC'));
+                                        $date->setTimezone(new DateTimeZone('Europe/Madrid'));
+                                        $formattedDate = $date->format('d-m-Y H:i');
+                                        $isRecent = ($currentDate->getTimestamp() - $date->getTimestamp()) < 3600; // Menos de 1 hora
+                                    ?>
+                                        <tr>
+                                            <td>
+                                                <div class="ip-address">
+                                                    <i class="fas fa-lock"></i>
+                                                    <span><?php echo htmlspecialchars($ip); ?></span>
+                                                    <?php if ($isRecent): ?>
+                                                        <span class="new-badge" title="Bloqueada recientemente">Nuevo</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td class="timestamp" title="<?php echo $formattedDate; ?>">
+                                                <?php echo $formattedDate; ?>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="alert-count"><?php echo $info['alert_count']; ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="gravedad-badge gravedad-<?php echo $info['max_severity'] ?: 1; ?>">
+                                                    <?php 
+                                                    $severityText = ['Baja', 'Media', 'Alta'];
+                                                    $severityNum = (int)$info['max_severity'] - 1;
+                                                    echo $severityText[$severityNum] ?? 'N/A'; 
+                                                    ?>
+                                                </span>
+                                            </td>
+                                            <td class="reason" title="<?php 
+                                                $reason = $info['reason'] ?: 'Sin especificar';
+                                                $reason = preg_replace('/\s*\[Actividad de red normal\]$/', '', $reason);
+                                                echo htmlspecialchars($reason); 
+                                            ?>">
+                                                <?php 
+                                                    $reason = $info['reason'] ?: 'Sin especificar';
+                                                    $reason = preg_replace('/\s*\[Actividad de red normal\]$/', '', $reason);
+                                                    echo htmlspecialchars($reason); 
+                                                ?>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="status-badge blocked">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                    Bloqueada
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
                 <div class="recent-alerts">
                     <div class="section-header">
-                        <h3><i class="fas fa-bell"></i> Alertas recientes</h3>
-                        <a href="alerts.php" class="view-all">Ver todas <i class="fas fa-arrow-right"></i></a>
+                        <h3><i class="fas fa-bell"></i> Alertas recientes <a href="alerts.php" class="view-all"><i class="fas fa-arrow-right"></i></a></h3>
                     </div>
                     <div class="table-container">
                         <table>
