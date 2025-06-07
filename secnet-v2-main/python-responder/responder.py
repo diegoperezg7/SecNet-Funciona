@@ -120,41 +120,43 @@ def is_ip_blocked_in_iptables(ip_address):
         bool: True si la IP ya está bloqueada, False en caso contrario
     """
     try:
-        # Primero verificamos si hay alguna regla que coincida con la IP
-        cmd = ["iptables", "-S"]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Verificar si la IP está en la lista de bloqueados
+        list_cmd = ["iptables", "-L", "-n", "-v"]
+        result = subprocess.run(list_cmd, capture_output=True, text=True)
         
-        # Buscamos reglas que bloqueen la IP
-        drop_rules = [
-            f"-A INPUT -s {ip_address} -j DROP",
-            f"-A FORWARD -s {ip_address} -j DROP",
-            f"-A DOCKER-USER -s {ip_address} -j DROP",
-            f"-A OUTPUT -d {ip_address} -j DROP",
-            f"-A INPUT -s {ip_address}/32 -j DROP",
-            f"-A FORWARD -s {ip_address}/32 -j DROP",
-            f"-A DOCKER-USER -s {ip_address}/32 -j DROP",
-            f"-A OUTPUT -d {ip_address}/32 -j DROP"
+        if result.returncode != 0:
+            logger.error(f"Error al listar reglas de iptables: {result.stderr}")
+            return False
+            
+        # Buscar la IP en la salida
+        ip_in_rules = ip_address in result.stdout
+        
+        # Verificar reglas específicas para esta IP
+        check_commands = [
+            ["iptables", "-C", "INPUT", "-s", ip_address, "-j", "DROP"],
+            ["iptables", "-C", "FORWARD", "-s", ip_address, "-j", "DROP"],
+            ["iptables", "-C", "FORWARD", "-d", ip_address, "-j", "DROP"],
+            ["iptables", "-C", "OUTPUT", "-d", ip_address, "-j", "DROP"],
+            ["iptables", "-t", "raw", "-C", "PREROUTING", "-s", ip_address, "-j", "DROP"],
+            ["iptables", "-C", "DOCKER-USER", "-s", ip_address, "-j", "DROP"],
+            ["iptables", "-C", "DOCKER-USER", "-d", ip_address, "-j", "DROP"]
         ]
         
-        # Verificar si alguna de las reglas de bloqueo existe
-        for rule in drop_rules:
-            if rule in result.stdout:
-                logger.debug(f"Regla de bloqueo encontrada: {rule}")
-                return True
-                
-        # Verificar también en las cadenas PREROUTING de las tablas raw y filter
-        for table in ["raw", "filter"]:
-            cmd = ["iptables", "-t", table, "-S", "PREROUTING"]
+        # Contar cuántas reglas de bloqueo están presentes
+        rules_present = 0
+        for cmd in check_commands:
             result = subprocess.run(cmd, capture_output=True, text=True)
-            if f"-A PREROUTING -s {ip_address} -j DROP" in result.stdout:
-                logger.debug(f"Regla de bloqueo encontrada en {table}.PREROUTING")
-                return True
-                
-        return False
+            if result.returncode == 0:  # La regla existe
+                rules_present += 1
         
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error al verificar reglas de iptables: {e.stderr or e}")
-        return False
+        # Si al menos 3 reglas de bloqueo están presentes, consideramos la IP como bloqueada
+        is_blocked = rules_present >= 3
+        
+        if not is_blocked and ip_in_rules:
+            logger.warning(f"IP {ip_address} aparece en las reglas pero no está completamente bloqueada (reglas encontradas: {rules_present}/7)")
+        
+        return is_blocked
+        
     except Exception as e:
         logger.error(f"Error inesperado en is_ip_blocked_in_iptables: {e}")
         return False
@@ -163,31 +165,135 @@ def _save_iptables_rules():
     """
     Guarda las reglas de iptables para que persistan después de reiniciar.
     Asegura que el directorio existe y tiene los permisos correctos.
+    Intenta múltiples métodos para garantizar que las reglas persistan.
     """
     try:
+        logger.info("Guardando reglas de iptables...")
+        success = False
+        
         # Asegurarse de que el directorio existe con los permisos correctos
-        os.makedirs("/etc/iptables", mode=0o755, exist_ok=True)
+        try:
+            os.makedirs("/etc/iptables", mode=0o755, exist_ok=True)
+            os.chmod("/etc/iptables", 0o755)
+        except Exception as e:
+            logger.error(f"Error al crear/configurar directorio /etc/iptables: {e}")
         
-        # Guardar reglas IPv4
-        with open("/etc/iptables/rules.v4", "w") as f:
-            subprocess.run(["iptables-save"], stdout=f, check=True)
+        # Método 1: Usar iptables-save directamente (más confiable)
+        save_attempts = [
+            # Primero intentamos con el método directo
+            {"file": "/etc/iptables/rules.v4", "cmd": ["iptables-save"]},
+            # Luego intentamos con la ruta completa por si el PATH no está configurado
+            {"file": "/etc/iptables/rules.v4", "cmd": ["/sbin/iptables-save"]},
+            # Finalmente intentamos con sudo por si hay problemas de permisos
+            {"file": "/etc/iptables/rules.v4", "cmd": ["sudo", "iptables-save"]}
+        ]
         
-        # Asegurar permisos del archivo
-        os.chmod("/etc/iptables/rules.v4", 0o644)
+        for attempt in save_attempts:
+            if success:
+                break
+                
+            try:
+                with open(attempt["file"], "w") as f:
+                    result = subprocess.run(
+                        attempt["cmd"],
+                        stdout=f,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+                    
+                    if result.returncode == 0:
+                        os.chmod(attempt["file"], 0o644)
+                        logger.info(f"Reglas guardadas usando: {' '.join(attempt['cmd'])}")
+                        success = True
+                    else:
+                        logger.warning(f"Error al guardar con {' '.join(attempt['cmd'])}: {result.stderr}")
+                        
+            except Exception as e:
+                logger.warning(f"Error al ejecutar {' '.join(attempt['cmd'])}: {e}")
         
-        # Verificar que las reglas se guardaron correctamente
-        if os.path.exists("/etc/iptables/rules.v4") and os.path.getsize("/etc/iptables/rules.v4") > 0:
-            logger.info("Reglas de iptables guardadas correctamente en /etc/iptables/rules.v4")
-            return True
+        # Método 2: Usar netfilter-persistent si está disponible
+        if not success:
+            try:
+                # Verificar si netfilter-persistent está instalado
+                check_cmd = ["which", "netfilter-persistent"]
+                if subprocess.run(check_cmd, capture_output=True).returncode == 0:
+                    # Guardar reglas IPv4
+                    result = subprocess.run(
+                        ["netfilter-persistent", "save"],
+                        capture_output=True,
+                        text=True
+                    )
+                    
+                    if result.returncode == 0:
+                        logger.info("Reglas guardadas usando netfilter-persistent")
+                        success = True
+                    else:
+                        logger.warning(f"Error al guardar con netfilter-persistent: {result.stderr}")
+                
+            except Exception as e:
+                logger.warning(f"Error con netfilter-persistent: {e}")
+        
+        # Método 3: Usar iptables-persistent si está disponible
+        if not success:
+            try:
+                # Verificar si iptables-persistent está instalado
+                check_cmd = ["which", "iptables-persistent"]
+                if subprocess.run(check_cmd, capture_output=True).returncode == 0:
+                    # Guardar reglas
+                    result = subprocess.run(
+                        ["invoke-rc.d", "iptables-persistent", "save"],
+                        capture_output=True,
+                        text=True
+                    )
+                    
+                    if result.returncode == 0:
+                        logger.info("Reglas guardadas usando iptables-persistent")
+                        success = True
+                    else:
+                        logger.warning(f"Error al guardar con iptables-persistent: {result.stderr}")
+                        
+            except Exception as e:
+                logger.warning(f"Error con iptables-persistent: {e}")
+        
+        # Verificar que al menos un método funcionó
+        rules_file = "/etc/iptables/rules.v4"
+        if os.path.exists(rules_file) and os.path.getsize(rules_file) > 0:
+            logger.info(f"Reglas de iptables guardadas correctamente en {rules_file}")
+            success = True
+            
+            # Asegurarse de que el servicio iptables-persistent esté habilitado
+            try:
+                service_path = "/etc/init.d/iptables-persistent"
+                if os.path.exists(service_path):
+                    # Intentar habilitar el servicio
+                    enable_cmd = ["update-rc.d", "iptables-persistent", "defaults"]
+                    result = subprocess.run(enable_cmd, capture_output=True, text=True)
+                    
+                    if result.returncode == 0:
+                        logger.info("Servicio iptables-persistent habilitado")
+                    else:
+                        logger.warning(f"No se pudo habilitar iptables-persistent: {result.stderr}")
+                        
+                    # Asegurarse de que el servicio se inicie al arrancar
+                    subprocess.run(["systemctl", "enable", "netfilter-persistent"], 
+                                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                    
+            except Exception as e:
+                logger.warning(f"Error al configurar servicios: {e}")
         else:
             logger.error("No se pudo guardar correctamente el archivo de reglas de iptables")
-            return False
+        
+        # Forzar la sincronización del sistema de archivos
+        os.sync()
+        return success
             
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error al ejecutar iptables-save: {e.stderr or e}")
+        logger.error(f"Error al ejecutar comando: {e.stderr or e}")
         return False
     except Exception as e:
         logger.error(f"Error inesperado al guardar reglas de iptables: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return False
 
 def block_ip(ip_address, reason):
@@ -201,7 +307,6 @@ def block_ip(ip_address, reason):
     Returns:
         bool: True si el bloqueo fue exitoso, False en caso contrario
     """
-
     try:
         logger.info(f"Intentando bloquear IP: {ip_address} - Razón: {reason}")
         if not validate_ip(ip_address):
@@ -214,6 +319,7 @@ def block_ip(ip_address, reason):
             return True
         
         # Registrar en la base de datos
+        conn = None
         try:
             conn = sqlite3.connect(DB_PATH, timeout=10)
             cursor = conn.cursor()
@@ -229,55 +335,132 @@ def block_ip(ip_address, reason):
                 logger.info(f"IP {ip_address} registrada en la base de datos")
         except sqlite3.IntegrityError:
             logger.info(f"La IP {ip_address} ya existe en la base de datos")
-            conn.rollback()
+            if conn:
+                conn.rollback()
         except Exception as e:
             logger.error(f"Error en la base de datos: {e}")
-            try:
-                conn.close()
-            except:
-                pass
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except:
+                    pass
+        
+        # Crear un script temporal para aplicar las reglas atómicamente
+        temp_script = "/tmp/block_ip_" + ip_address.replace('.', '_') + ".sh"
+        try:
+            with open(temp_script, 'w') as f:
+                f.write("#!/bin/bash\n")
+                f.write("set -e\n")  # Salir en el primer error
+                f.write(f"# Script para bloquear IP {ip_address}\n")
+                
+                # Reglas a aplicar - versión mejorada
+                rules = [
+                    # 1. Bloqueo en tabla raw (muy temprano en el stack)
+                    f"iptables -t raw -I PREROUTING 1 -s {ip_address} -j DROP",
+                    
+                    # 2. Bloqueo en tabla filter (INPUT, OUTPUT, FORWARD)
+                    f"iptables -I INPUT 1 -s {ip_address} -j DROP",
+                    f"iptables -I FORWARD 1 -s {ip_address} -j DROP",
+                    f"iptables -I FORWARD 1 -d {ip_address} -j DROP",
+                    f"iptables -I OUTPUT 1 -d {ip_address} -j DROP",
+                    
+                    # 3. Bloqueo para Docker
+                    f"iptables -I DOCKER-USER 1 -s {ip_address} -j DROP",
+                    f"iptables -I DOCKER-USER 1 -d {ip_address} -j DROP",
+                    
+                    # 4. Bloqueo de ICMP
+                    f"iptables -I INPUT 1 -p icmp -s {ip_address} -j DROP",
+                    
+                    # 5. Bloqueo de conexiones establecidas
+                    f"iptables -I INPUT 1 -m conntrack --ctstate ESTABLISHED,RELATED -s {ip_address} -j DROP",
+                    
+                    # 6. Bloqueo en tabla mangle para paquetes fragmentados
+                    f"iptables -t mangle -I PREROUTING 1 -s {ip_address} -j DROP"
+                ]
+                
+                # Aplicar cada regla individualmente
+                for rule in rules:
+                    f.write(f"echo 'Aplicando regla: {rule}'\n")
+                    f.write(f"{rule} || {{ echo 'Error al aplicar regla: {rule}'; exit 1; }}\n")
+                
+                # Guardar reglas persistentemente
+                f.write("\n# Intentar guardar las reglas persistentemente\n")
+                f.write("echo 'Guardando reglas de iptables...'\n")
+                f.write("if command -v iptables-save >/dev/null 2>&1; then\n")
+                f.write("    iptables-save > /etc/iptables/rules.v4\n")
+                f.write("    echo 'Reglas guardadas en /etc/iptables/rules.v4'\n")
+                f.write("fi\n")
+                
+                f.write("if command -v netfilter-persistent >/dev/null 2>&1; then\n")
+                f.write("    netfilter-persistent save >/dev/null 2>&1 && echo 'Reglas guardadas con netfilter-persistent'\n")
+                f.write("fi\n")
+                
+                f.write("echo 'Bloqueo completado exitosamente'\n")
+            
+            # Hacer ejecutable el script
+            os.chmod(temp_script, 0o755)
+            
+            # Ejecutar el script con bash para mejor manejo de errores
+            logger.info(f"Ejecutando script de bloqueo para {ip_address}")
+            result = subprocess.run(
+                ['/bin/bash', '-x', temp_script],  # -x para depuración
+                capture_output=True, 
+                text=True
+            )
+            
+            # Registrar la salida para depuración
+            if result.stdout:
+                logger.debug(f"Salida del script de bloqueo: {result.stdout}")
+            if result.stderr:
+                logger.error(f"Errores del script de bloqueo: {result.stderr}")
+            
+            if result.returncode != 0:
+                logger.error(f"Error al ejecutar el script de bloqueo (código {result.returncode})")
+                return False
+                
+            logger.info(f"Script de bloqueo para {ip_address} ejecutado exitosamente")
+            
+            # Verificar que la IP esté bloqueada
+            logger.info(f"Verificando bloqueo de {ip_address}...")
+            if is_ip_blocked_in_iptables(ip_address):
+                logger.info(f"IP {ip_address} bloqueada exitosamente")
+                # Forzar el guardado de las reglas
+                _save_iptables_rules()
+                return True
+            else:
+                logger.error(f"No se pudo verificar el bloqueo de la IP {ip_address}")
+                # Intentar un método alternativo de bloqueo
+                logger.info("Intentando método alternativo de bloqueo...")
+                try:
+                    subprocess.run(["iptables", "-A", "INPUT", "-s", ip_address, "-j", "DROP"], check=True)
+                    subprocess.run(["iptables", "-A", "FORWARD", "-s", ip_address, "-j", "DROP"])
+                    _save_iptables_rules()
+                    return True
+                except Exception as e:
+                    logger.error(f"Error en método alternativo de bloqueo: {e}")
+                    return False
+                
+        except Exception as e:
+            logger.error(f"Error al crear/ejecutar script de bloqueo: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return False
         finally:
+            # Limpiar script temporal
             try:
-                conn.close()
-            except:
-                pass
-        
-        # Definir las reglas de iptables a aplicar
-        iptables_rules = [
-            # (tabla, cadena, posición, argumentos)
-            ("raw", "PREROUTING", 1, ["-s", ip_address, "-j", "DROP"]),  # Más temprano posible
-            ("filter", "INPUT", 1, ["-s", ip_address, "-j", "DROP"]),     # Tráfico entrante
-            ("filter", "FORWARD", 1, ["-s", ip_address, "-j", "DROP"]),   # Tráfico reenviado
-            ("filter", "DOCKER-USER", 1, ["-s", ip_address, "-j", "DROP"]), # Tráfico Docker
-            ("filter", "OUTPUT", 1, ["-d", ip_address, "-j", "DROP"])      # Tráfico saliente
-        ]
-        
-        # Aplicar las reglas
-        for table, chain, position, rule_args in iptables_rules:
-            try:
-                # Primero intentamos insertar al principio
-                cmd = ["iptables", "-t", table, "-I", chain, str(position)] + rule_args
-                subprocess.run(cmd, check=True, capture_output=True, text=True)
-                logger.info(f"Regla aplicada: {' '.join(cmd)}")
-            except subprocess.CalledProcessError as e:
-                logger.warning(f"No se pudo insertar regla, intentando append: {' '.join(cmd)}")
-                try:
-                    # Si falla, intentamos añadir al final
-                    cmd = ["iptables", "-t", table, "-A", chain] + rule_args[2:]  # Eliminamos posición
-                    subprocess.run(cmd, check=True, capture_output=True, text=True)
-                    logger.info(f"Regla aplicada (append): {' '.join(cmd)}")
-                except subprocess.CalledProcessError as e2:
-                    logger.error(f"Error al aplicar regla para {ip_address} en {table}.{chain}: {e2.stderr or e2}")
-        
-        # Verificar que la IP esté bloqueada
-        if is_ip_blocked_in_iptables(ip_address):
-            logger.info(f"IP {ip_address} bloqueada exitosamente")
-            _save_iptables_rules()
-            return True
+                if os.path.exists(temp_script):
+                    os.unlink(temp_script)
+            except Exception as e:
+                logger.warning(f"No se pudo eliminar el script temporal: {e}")
             
-        logger.error(f"No se pudo verificar el bloqueo de la IP {ip_address}")
-        return False
+            # Forzar la sincronización del sistema de archivos
+            os.sync()
         
     except Exception as e:
         logger.error(f"Error inesperado en block_ip: {e}")
@@ -384,46 +567,54 @@ def classify_alert(alert_data):
     if 'dns' in alert_data and 'rrname' in alert_data['dns']:
         dns_rrname = alert_data['dns']['rrname']
     alert_msg = alert_data.get('alert', {}).get('signature', '')
-    priority = int(alert_data.get('alert', {}).get('priority', 3))  # Por defecto baja
     
-    # Usamos la gravedad directamente del JSON
-    # severity 1 = Baja
-    # severity 2 = Media
-    # severity 3 = Alta
-    severity = int(alert_data.get('alert', {}).get('severity', 1))  # Por defecto baja gravedad
-    
-    # --- HTTP interno: siempre gravedad 1 ---
-    if 'http' in alert_msg.lower():
-        if ((src_ip in LOCAL_IPS or src_ip in SAFE_IPS) and
-            (dest_ip in LOCAL_IPS or dest_ip in SAFE_IPS)):
-            return 'HTTP interno bajo', 1
-        for pattern in SAFE_DOMAINS:
-            if (dns_rrname and re.search(pattern, dns_rrname)) or re.search(pattern, dest_ip):
-                return 'HTTP interno bajo', 1
+    # Obtenemos la severidad directamente del JSON de alerta
+    # Las reglas de Suricata definen:
+    # - priority:1 = Baja
+    # - priority:2 = Media
+    # - priority:3 = Alta
+    severity = int(alert_data.get('alert', {}).get('priority', 1))  # Por defecto baja gravedad
     
     # --- Tráfico interno seguro (no HTTP): ignorar ---
     if ((src_ip in LOCAL_IPS or src_ip in SAFE_IPS) and
         (dest_ip in LOCAL_IPS or dest_ip in SAFE_IPS)):
         return 'Tráfico interno seguro', 0
     
+    # --- HTTP interno: gravedad 1 ---
+    if 'http' in alert_msg.lower():
+        if ((src_ip in LOCAL_IPS or src_ip in SAFE_IPS) and
+            (dest_ip in LOCAL_IPS or dest_ip in SAFE_IPS)):
+            return 'HTTP interno', 1
+        for pattern in SAFE_DOMAINS:
+            if (dns_rrname and re.search(pattern, dns_rrname)) or re.search(pattern, dest_ip):
+                return 'HTTP legítimo externo', 1
+    
+    # --- Dominios seguros ---
     for pattern in SAFE_DOMAINS:
         if (dns_rrname and re.search(pattern, dns_rrname)) or re.search(pattern, dest_ip):
             return 'Tráfico legítimo externo', 1
     if src_ip in SAFE_IPS:
         return 'Tráfico legítimo externo', 1
-        
-    # --- Clasificar según gravedad ---
-    if severity == 3:  # Alta gravedad
-        if 'SSH Brute Force Attempt' in alert_msg:
-            return 'Intento de fuerza bruta SSH', severity
-        return 'Amenaza confirmada', severity
-    elif severity == 2:  # Media gravedad
-        # Añadir detección de escaneo de puertos
-        if 'SYN Scan to HTTP port' in alert_msg or 'Port Scan' in alert_msg:
-            return 'Escaneo de puertos detectado', severity
+    
+    # --- Mensajes descriptivos basados en severidad ---
+    # Usamos la severidad definida en la regla (priority en Suricata)
+    # 1 = Baja, 2 = Media, 3 = Alta
+    
+    # Mapeo de mensajes a descripciones más amigables
+    if 'SSH Brute Force Attempt' in alert_msg:
+        return 'Intento de fuerza bruta SSH', severity
+    elif 'SYN Scan to HTTP port' in alert_msg or 'Port Scan' in alert_msg:
+        return 'Escaneo de puertos detectado', severity
+    elif 'ICMP Ping' in alert_msg:
+        return 'Ping ICMP detectado', severity
+    
+    # Para otras alertas, usamos la severidad definida en la regla
+    if severity == 3:
+        return 'Amenaza de alta gravedad', severity
+    elif severity == 2:
         return 'Actividad sospechosa', severity
-    else:  # Baja gravedad (1)
-        return 'Actividad normal', severity
+    else:  # severity 1
+        return 'Actividad de red normal', severity
 
 def parse_suricata_timestamp(timestamp_str):
     """Parsea el formato de timestamp de Suricata a un objeto datetime."""
