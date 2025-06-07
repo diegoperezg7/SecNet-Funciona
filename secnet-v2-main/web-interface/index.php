@@ -63,7 +63,8 @@
                     $total_alerts = $db->querySingle("SELECT COUNT(*) FROM alerts WHERE $where_not_blocked AND $timeFilter");
                     $high_severity = $db->querySingle("SELECT COUNT(*) FROM alerts WHERE severity >= 2 AND ($where_not_blocked) AND $timeFilter");
                     $blocked_ips = $db->querySingle("SELECT COUNT(DISTINCT ip_address) FROM blocked_ips");
-                    $recent_alerts = $db->querySingle("SELECT COUNT(*) FROM alerts WHERE $timeFilter AND ($where_not_blocked)");
+                    // Contar alertas de las últimas 24 horas independientemente del filtro de tiempo seleccionado
+                    $recent_alerts = $db->querySingle("SELECT COUNT(*) FROM alerts WHERE timestamp > datetime('now', '-24 hours') AND ($where_not_blocked)");
 
                     // Get alert types for chart data
                     $alert_types = [];

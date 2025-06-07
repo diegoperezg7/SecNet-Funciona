@@ -5,7 +5,7 @@ require_once '../includes/functions.php';
 header('Content-Type: application/json');
 
 try {
-    $db = new PDO("sqlite:../../database/alerts.db");
+    $db = new PDO("sqlite:/var/www/html/database/alerts.db");
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Obtener lista de IPs bloqueadas

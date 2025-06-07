@@ -111,7 +111,7 @@ def validate_ip(ip_address):
 # ----------------------------------------
 def is_ip_blocked_in_iptables(ip_address):
     """
-    Verifica si una IP ya está bloqueada en iptables.
+    Verifica si una IP ya está bloqueada en iptables de manera más precisa.
     
     Args:
         ip_address (str): La dirección IP a verificar
@@ -120,21 +120,74 @@ def is_ip_blocked_in_iptables(ip_address):
         bool: True si la IP ya está bloqueada, False en caso contrario
     """
     try:
-        # Verificar en la cadena INPUT
-        cmd = ["iptables", "-C", "INPUT", "-s", ip_address, "-j", "DROP"]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            return True
-            
-        # Verificar en la cadena DOCKER-USER si existe
-        cmd = ["iptables", "-C", "DOCKER-USER", "-s", ip_address, "-j", "DROP"]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            return True
-            
+        # Primero verificamos si hay alguna regla que coincida con la IP
+        cmd = ["iptables", "-S"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        
+        # Buscamos reglas que bloqueen la IP
+        drop_rules = [
+            f"-A INPUT -s {ip_address} -j DROP",
+            f"-A FORWARD -s {ip_address} -j DROP",
+            f"-A DOCKER-USER -s {ip_address} -j DROP",
+            f"-A OUTPUT -d {ip_address} -j DROP",
+            f"-A INPUT -s {ip_address}/32 -j DROP",
+            f"-A FORWARD -s {ip_address}/32 -j DROP",
+            f"-A DOCKER-USER -s {ip_address}/32 -j DROP",
+            f"-A OUTPUT -d {ip_address}/32 -j DROP"
+        ]
+        
+        # Verificar si alguna de las reglas de bloqueo existe
+        for rule in drop_rules:
+            if rule in result.stdout:
+                logger.debug(f"Regla de bloqueo encontrada: {rule}")
+                return True
+                
+        # Verificar también en las cadenas PREROUTING de las tablas raw y filter
+        for table in ["raw", "filter"]:
+            cmd = ["iptables", "-t", table, "-S", "PREROUTING"]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if f"-A PREROUTING -s {ip_address} -j DROP" in result.stdout:
+                logger.debug(f"Regla de bloqueo encontrada en {table}.PREROUTING")
+                return True
+                
+        return False
+        
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error al verificar reglas de iptables: {e.stderr or e}")
         return False
     except Exception as e:
-        logger.error(f"Error al verificar IP en iptables: {e}")
+        logger.error(f"Error inesperado en is_ip_blocked_in_iptables: {e}")
+        return False
+
+def _save_iptables_rules():
+    """
+    Guarda las reglas de iptables para que persistan después de reiniciar.
+    Asegura que el directorio existe y tiene los permisos correctos.
+    """
+    try:
+        # Asegurarse de que el directorio existe con los permisos correctos
+        os.makedirs("/etc/iptables", mode=0o755, exist_ok=True)
+        
+        # Guardar reglas IPv4
+        with open("/etc/iptables/rules.v4", "w") as f:
+            subprocess.run(["iptables-save"], stdout=f, check=True)
+        
+        # Asegurar permisos del archivo
+        os.chmod("/etc/iptables/rules.v4", 0o644)
+        
+        # Verificar que las reglas se guardaron correctamente
+        if os.path.exists("/etc/iptables/rules.v4") and os.path.getsize("/etc/iptables/rules.v4") > 0:
+            logger.info("Reglas de iptables guardadas correctamente en /etc/iptables/rules.v4")
+            return True
+        else:
+            logger.error("No se pudo guardar correctamente el archivo de reglas de iptables")
+            return False
+            
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error al ejecutar iptables-save: {e.stderr or e}")
+        return False
+    except Exception as e:
+        logger.error(f"Error inesperado al guardar reglas de iptables: {e}")
         return False
 
 def block_ip(ip_address, reason):
@@ -148,111 +201,86 @@ def block_ip(ip_address, reason):
     Returns:
         bool: True si el bloqueo fue exitoso, False en caso contrario
     """
+
     try:
         logger.info(f"Intentando bloquear IP: {ip_address} - Razón: {reason}")
         if not validate_ip(ip_address):
             logger.error("IP inválida: %s", ip_address)
             return False
             
-        # Verificar si ya está bloqueada en iptables
+        # Verificar si ya está bloqueada
         if is_ip_blocked_in_iptables(ip_address):
-            logger.info(f"La IP {ip_address} ya está bloqueada en iptables")
+            logger.info(f"La IP {ip_address} ya está bloqueada")
             return True
         
-        # Conectar a la base de datos
-        conn = sqlite3.connect(DB_PATH, timeout=10)
-        conn.execute('PRAGMA journal_mode=WAL;')
-        cursor = conn.cursor()
-        
-        # Verificar si la IP ya está en la base de datos
-        cursor.execute("SELECT * FROM blocked_ips WHERE ip_address = ?", (ip_address,))
-        if not cursor.fetchone():
-            # Registrar el bloqueo en la base de datos si no existe
-            timestamp = datetime.now().isoformat()
-            cursor.execute(
-                "INSERT INTO blocked_ips (ip_address, timestamp, reason) VALUES (?, ?, ?)",
-                (ip_address, timestamp, reason)
-            )
-            conn.commit()
-        
-        conn.close()
-        
-        # Función para ejecutar comandos con manejo de errores
-        def run_command(cmd, use_sudo=False):
-            try:
-                if use_sudo:
-                    cmd = ["sudo"] + cmd
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                return True, result
-            except subprocess.CalledProcessError as e:
-                logger.error("Error al ejecutar comando %s: %s", " ".join(cmd), e.stderr or str(e))
-                return False, e
-        
-        # Comandos para bloquear la IP
-        iptables_cmds = [
-            # Bloquear tráfico entrante
-            ["iptables", "-I", "INPUT", "1", "-s", ip_address, "-j", "DROP"],
-            # Bloquear tráfico saliente (opcional, dependiendo de tus necesidades)
-            # ["iptables", "-I", "OUTPUT", "1", "-d", ip_address, "-j", "DROP"],
-            # Bloquear en la cadena DOCKER-USER si existe
-            ["sh", "-c", f"iptables -C DOCKER-USER -j RETURN 2>/dev/null && iptables -I DOCKER-USER 1 -s {ip_address} -j DROP || true"],
-            # Asegurarse de que el directorio para guardar las reglas existe
-            ["sh", "-c", "mkdir -p /etc/iptables"],
-            # Guardar las reglas de iptables
-            ["sh", "-c", "iptables-save > /etc/iptables/rules.v4"]
-        ]
-        
-        # Ejecutar comandos de bloqueo
-        for cmd in iptables_cmds:
-            success, _ = run_command(cmd)
-            if not success and cmd[0] != "sh":  # Ignorar fallos en comandos de shell complejos
-                logger.error(f"Error al ejecutar comando: {' '.join(cmd)}")
-                return False
-                
-        # Verificar que la IP esté realmente bloqueada
-        if not is_ip_blocked_in_iptables(ip_address):
-            logger.error(f"No se pudo verificar el bloqueo de la IP {ip_address} en iptables")
-            return False
+        # Registrar en la base de datos
+        try:
+            conn = sqlite3.connect(DB_PATH, timeout=10)
+            cursor = conn.cursor()
             
-        logger.info(f"IP {ip_address} bloqueada correctamente en iptables")
-        return True
+            # Verificar si ya existe en la base de datos
+            cursor.execute("SELECT * FROM blocked_ips WHERE ip_address = ?", (ip_address,))
+            if not cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO blocked_ips (ip_address, timestamp, reason) VALUES (?, ?, ?)",
+                    (ip_address, datetime.now().isoformat(), reason)
+                )
+                conn.commit()
+                logger.info(f"IP {ip_address} registrada en la base de datos")
+        except sqlite3.IntegrityError:
+            logger.info(f"La IP {ip_address} ya existe en la base de datos")
+            conn.rollback()
+        except Exception as e:
+            logger.error(f"Error en la base de datos: {e}")
+            try:
+                conn.close()
+            except:
+                pass
+            return False
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
         
-        # Guardar las reglas de iptables para que persistan
-        save_commands = [
-            ["which", "iptables-persistent"],
-            ["which", "netfilter-persistent"],
-            ["which", "iptables-save"]
+        # Definir las reglas de iptables a aplicar
+        iptables_rules = [
+            # (tabla, cadena, posición, argumentos)
+            ("raw", "PREROUTING", 1, ["-s", ip_address, "-j", "DROP"]),  # Más temprano posible
+            ("filter", "INPUT", 1, ["-s", ip_address, "-j", "DROP"]),     # Tráfico entrante
+            ("filter", "FORWARD", 1, ["-s", ip_address, "-j", "DROP"]),   # Tráfico reenviado
+            ("filter", "DOCKER-USER", 1, ["-s", ip_address, "-j", "DROP"]), # Tráfico Docker
+            ("filter", "OUTPUT", 1, ["-d", ip_address, "-j", "DROP"])      # Tráfico saliente
         ]
         
-        saved = False
-        for cmd in save_commands:
-            if run_command(cmd)[0]:
-                if "iptables-persistent" in cmd[1]:
-                    success, _ = run_command(["sh", "-c", "iptables-save > /etc/iptables/rules.v4"])
-                    if success:
-                        saved = True
-                        break
-                elif "netfilter-persistent" in cmd[1]:
-                    success, _ = run_command(["netfilter-persistent", "save"])
-                    if success:
-                        saved = True
-                        break
-                elif "iptables-save" in cmd[1]:
-                    success, _ = run_command(["sh", "-c", "iptables-save > /etc/iptables/rules.v4"])
-                    if success:
-                        saved = True
-                        break
+        # Aplicar las reglas
+        for table, chain, position, rule_args in iptables_rules:
+            try:
+                # Primero intentamos insertar al principio
+                cmd = ["iptables", "-t", table, "-I", chain, str(position)] + rule_args
+                subprocess.run(cmd, check=True, capture_output=True, text=True)
+                logger.info(f"Regla aplicada: {' '.join(cmd)}")
+            except subprocess.CalledProcessError as e:
+                logger.warning(f"No se pudo insertar regla, intentando append: {' '.join(cmd)}")
+                try:
+                    # Si falla, intentamos añadir al final
+                    cmd = ["iptables", "-t", table, "-A", chain] + rule_args[2:]  # Eliminamos posición
+                    subprocess.run(cmd, check=True, capture_output=True, text=True)
+                    logger.info(f"Regla aplicada (append): {' '.join(cmd)}")
+                except subprocess.CalledProcessError as e2:
+                    logger.error(f"Error al aplicar regla para {ip_address} en {table}.{chain}: {e2.stderr or e2}")
         
-        if not saved:
-            logger.warning("No se pudo guardar las reglas de iptables de forma persistente")
-        else:
-            logger.info("Reglas de iptables guardadas correctamente")
-        
-        logger.info("IP %s bloqueada correctamente", ip_address)
-        return True
+        # Verificar que la IP esté bloqueada
+        if is_ip_blocked_in_iptables(ip_address):
+            logger.info(f"IP {ip_address} bloqueada exitosamente")
+            _save_iptables_rules()
+            return True
+            
+        logger.error(f"No se pudo verificar el bloqueo de la IP {ip_address}")
+        return False
         
     except Exception as e:
-        logger.error("Error en block_ip() para IP %s: %s", ip_address, str(e), exc_info=True)
+        logger.error(f"Error inesperado en block_ip: {e}")
         return False
 
 def unblock_ip(ip_address):
@@ -386,8 +414,13 @@ def classify_alert(alert_data):
         
     # --- Clasificar según gravedad ---
     if severity == 3:  # Alta gravedad
+        if 'SSH Brute Force Attempt' in alert_msg:
+            return 'Intento de fuerza bruta SSH', severity
         return 'Amenaza confirmada', severity
     elif severity == 2:  # Media gravedad
+        # Añadir detección de escaneo de puertos
+        if 'SYN Scan to HTTP port' in alert_msg or 'Port Scan' in alert_msg:
+            return 'Escaneo de puertos detectado', severity
         return 'Actividad sospechosa', severity
     else:  # Baja gravedad (1)
         return 'Actividad normal', severity
@@ -471,10 +504,18 @@ def process_alert(alert_data):
             should_block = (
                 severity in [2, 3] and  # Solo bloquear si la gravedad es 2 o 3
                 src_ip and
-                src_ip not in LOCAL_IPS and 
-                src_ip not in SAFE_IPS and
+                src_ip not in ['127.0.0.1', '::1', 'localhost'] and  # Solo bloquear si no es localhost
                 src_ip != dest_ip  # No bloquear si la IP origen y destino son la misma
             )
+            
+            # Si es un intento de fuerza bruta SSH, ICMP o escaneo de puertos, bloquear siempre
+            if ('SSH Brute Force Attempt' in alert_message or 
+                'ICMP Ping' in alert_message or 
+                'Escaneo de puertos detectado' in categoria or
+                'SYN Scan to HTTP port' in alert_message):
+                should_block = True
+                severity = 3  # Asegurar gravedad alta
+                logger.info(f"IP {src_ip} marcada para bloqueo por actividad maliciosa: {alert_message}")
             
             # Debug: Mostrar información sobre la decisión de bloqueo
             logger.info(f"Evaluando bloqueo para {src_ip}: categoria={categoria}, gravedad={severity}, should_block={should_block}")
